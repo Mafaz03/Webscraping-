@@ -36,7 +36,6 @@ def fetch_date_from_url(url: str):
             # writeone
             
             return formatted_date
-#Remove the url in the return above
     except Exception as e:
         
         # data={
