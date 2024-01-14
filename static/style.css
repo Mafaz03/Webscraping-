@@ -1,0 +1,808 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 62.5%;
+}
+
+body {
+
+    transition: background-color 0.3s ease, color 0.3s ease;
+
+
+}
+
+
+.dark-mode-bg {
+    background-color: #242323;
+    color: #fff;
+    transition: all .3s ease-in;
+}
+
+.light-mode-bg {
+    background-color: #fff;
+    color: black;
+    transition: all .3s ease-in;
+}
+
+
+.dark-mode-bg-ans {
+    background-color: #000;
+    color: #fff;
+    transition: all .3s ease-in;
+}
+
+.light-mode-bg-ans {
+    background-color: #f0f4f9;
+    color: #000;
+    transition: all .3s ease-in;
+}
+
+.dark-mode-input {
+    color: #fff;
+    border: 1px solid white;
+    transition: all .3s ease-in;
+}
+
+
+.light-mode-input {
+    color: #000;
+    border: 1px solid black;
+    transition: all .3s ease-in;
+}
+
+.dark-mode-screen {
+    background-color: black;
+    color: white;
+    transition: all .3s ease-in;
+}
+
+.light-mode-screen {
+    background-color: #f0f4f9;
+    color: black;
+    transition: all .3s ease-in;
+}
+
+.top-panel {
+    width: 100vw;
+    height: 10vh;
+
+    display: flex;
+
+}
+
+.logo {
+    font-family: 'Roboto', sans-serif;
+    /* color: #fff; */
+    font-size: 2.5rem;
+    position: relative;
+    align-self: center;
+    font-family: 'Roboto', sans-serif;
+    margin-left: 1rem;
+
+}
+
+.des {
+    text-align: center;
+    /* color: white; */
+    align-self: center;
+    justify-self: center;
+    position: absolute;
+    left: 45%;
+    font-family: 'Roboto', sans-serif;
+
+}
+
+.logo::after {
+    content: "Beta";
+    font-size: 1rem;
+    position: absolute;
+    border: 1px solid #4285f4;
+    font-family: 'Roboto', sans-serif;
+    letter-spacing: 1px;
+    padding: .2rem;
+    top: 20%;
+    left: 110%;
+    color: #4285f4;
+
+}
+
+/* Main Prompt WIndow */
+
+.prompt-section {
+    width: 100vw;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* background-color: #4285f4; */
+    /* overflow: scroll; */
+}
+
+
+.prompt-screen {
+    width: 90vw;
+    height: 75vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* background-color: black; */
+    flex-direction: column;
+    border-top-right-radius: 3rem;
+    border-top-left-radius: 3rem;
+
+}
+
+.prompt {
+    /* background-color: black; */
+    width: 90vw;
+    height: 10vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom-right-radius: 3rem;
+    border-bottom-left-radius: 3rem;
+
+}
+
+.main-prompt {
+    width: 70rem;
+    height: 5rem;
+    background-color: transparent;
+    /* border: 1px solid white; */
+    border-radius: 2rem;
+    outline-width: 1rem;
+    font-size: 1.5rem;
+    /* color: white;      Testing the dark mode and light mode classes */
+    padding: 2rem;
+
+}
+
+::placeholder {
+    font-size: 1.8rem;
+    font-family: 'Roboto', sans-serif;
+
+}
+
+
+
+.send {
+    /* color: white; */
+
+    margin-left: 1rem;
+    cursor: pointer;
+}
+
+
+.ans-1 {
+    font-size: 1.5rem;
+    font-family: 'Roboto', sans-serif;
+    /* color: white; */
+    width: 70rem;
+    border: dotted #555 1px;
+    padding: 1rem;
+    line-height: 1.3;
+    border-radius: 2rem;
+    margin-top: 1rem;
+
+}
+
+.test {
+    display: flex;
+    flex-direction: column;
+    width: 88vw;
+    align-items: center;
+    overflow: auto;
+    transition: all 1s;
+    margin-top: 1rem;
+    transition: background-color 0.5s ease, color 0.5s ease;
+
+}
+
+
+
+.test::-webkit-scrollbar {
+    width: 12px;
+}
+
+.test::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.892);
+    border-radius: 10px;
+}
+
+.test::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 8px rgb(190, 179, 179);
+}
+
+.test::-webkit-scrollbar-thumb:hover {
+    -webkit-box-shadow: inset 0 0 6px rgb(250, 250, 250);
+}
+
+
+.test {
+    display: none;
+    /* opacity: 0; */
+    transition: opacity 1s ease, linear 1s;
+
+
+
+
+    opacity: 0;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+}
+
+
+
+
+.test-2 {
+    transition: all 1s;
+    height: 50rem;
+    /* background-color: #4285f4; */
+    /* display: flex; */
+    width: 50vw;
+    margin-top: 12rem;
+    border-radius: 3rem;
+    /* display: none; */
+
+}
+
+/* main code */
+
+/* .overlay {
+    opacity: 1;
+    visibility: visible;
+    height: auto;
+    margin-top: 0;
+
+    overflow: auto;
+    display: flex;
+
+    transition: opacity 0.5s ease-in-out, visibility 0s linear 0s, height 0s ease 0s, margin-top 0.5s ease 0s;
+}
+
+.hidden {
+    opacity: 0;
+    visibility: hidden;
+    height: 0;
+    margin-top: 0;
+    overflow: hidden;
+    transition: opacity 0.5s ease-in-out, visibility 0s linear 0.5s, height 0s ease 0s, margin-top 0s ease 0s;
+
+} */
+
+
+/* gpt. code */
+
+
+.overlay {
+    opacity: 1;
+    visibility: visible;
+    height: auto;
+    margin-top: 0;
+    padding: 0;
+    border: 0;
+    overflow: auto;
+    display: flex;
+    transition: opacity 0.5s ease-in-out, visibility 0s linear 0s, height 0s ease-in-out, margin-top 0.5s ease-in-out;
+}
+
+.hidden {
+    opacity: 0;
+    visibility: hidden;
+    height: 0;
+    margin-top: 0%;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    transition: opacity 0.5s ease-in-out, visibility 0s linear 0.5s, height 0s ease-in-out, margin-top 0.5s ease-in-out;
+}
+
+
+
+
+
+
+/* ending */
+.rainbow_text {
+    display: inline-block;
+    font-size: 4rem;
+
+    font-family: 'Roboto', sans-serif;
+    background: black;
+    background: linear-gradient(to right, red, pink, yellow, green, orange, purple, violet);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.rainbow_text.animated {
+    animation: rainbow_animation 5s ease-in-out infinite;
+    background-size: 400%;
+}
+
+@keyframes rainbow_animation {
+
+    0%,
+    100% {
+        background-position: 0
+    }
+
+    50% {
+        background-position: 100%
+    }
+}
+
+.about {
+    font-size: 2rem;
+    /* color: white; */
+    margin-top: 2rem;
+    border: 1px dotted white;
+    width: 32rem;
+    padding: 1rem;
+    font-family: 'Roboto', sans-serif;
+
+
+
+}
+
+.bg-border {
+    border: 1px dotted black;
+}
+
+.flex {
+    margin-top: 3rem;
+    width: 50vw;
+    height: 10vh;
+    display: flex;
+    gap: 2rem;
+    transition: all 1s ease-in-out
+}
+
+
+
+.box-1,
+.box-2,
+.box-3 {
+
+    transition: all 1s ease-in-out;
+    width: 50rem;
+    height: 23rem;
+    border-radius: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #cfc9c9;
+
+}
+
+
+.box-1 {
+    background: -webkit-gradient(linear, left top, right top, from(#cf8d7c), to(#a77cb4));
+
+}
+
+.box-2 {
+    background: -webkit-linear-gradient(left, #a77cb4, #7f7dd1);
+}
+
+.box-3 {
+    background: -webkit-gradient(linear, left top, right top, from(#7f7dd1), color-stop(100%, #548dd9), to(#548dd9));
+}
+
+.tag {
+    font-size: 3rem;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    text-align: center;
+    color: black;
+    transition: all 1s;
+
+
+
+}
+
+.menu {
+
+    /* color: white; */
+    font-size: 2rem;
+    margin-top: .5rem;
+    margin-left: 1.5rem;
+    cursor: pointer;
+
+}
+
+.flexnew {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.f {
+    display: flex;
+}
+
+
+.theme-btn {
+    width: 4em;
+    height: 4em;
+    padding: 0.5em;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    background-color: transparent;
+}
+
+.theme-btn img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+}
+
+.light {
+    background: none;
+}
+
+/* .theme-btn.light {
+    display: none;
+}
+
+.dark .theme-btn.dark {
+    display: none;
+}
+
+.dark .theme-btn.light {
+    display: block;
+} */
+
+.btn-mode {
+    margin-right: 3rem;
+}
+
+.hide {
+    display: none;
+}
+
+.active {
+    display: block;
+}
+
+
+
+
+
+.push {
+    /* position: absolute;
+    left: 0; */
+
+
+
+    /* background-color: #242323; */
+    width: 235px;
+    position: fixed;
+    top: 12.7%;
+    left: -235px;
+    border-radius: 2rem;
+    border: 2px solid rgb(180, 177, 177);
+    height: 67.6rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    padding-top: 90px;
+    transition: all .3s ease;
+}
+
+
+.chat-container {
+    width: 300px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    font-family: Arial, sans-serif;
+}
+
+.chat-history {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+.logo-brand {
+    background: #242323;
+}
+
+.message {
+    background-color: #f0f0f0;
+    padding: 5px 10px;
+    margin-bottom: 5px;
+
+    border-radius: 5px;
+}
+
+.total {
+    position: absolute;
+    top: 27px;
+    padding: 1rem;
+}
+
+
+.sidebarshow {
+    left: 0;
+}
+
+#datePicker {
+    font-family: 'Courier New', Courier, monospace;
+    text-transform: uppercase;
+    font-size: 2rem;
+    border: none;
+    border-radius: .6rem;
+    outline: none;
+    margin-bottom: 1rem;
+    cursor: pointer;
+}
+
+.history {
+    border: none;
+    width: 9rem;
+    height: 4rem;
+    background-color: #548dd9;
+    border-radius: .6rem;
+    margin-bottom: 2rem;
+    cursor: pointer;
+
+}
+
+#userInput {
+    margin-top: 6rem;
+    height: 3rem;
+    width: 17rem;
+    padding: 1rem;
+    border: none;
+    border-radius: .5rem;
+}
+
+.checksend {
+    border: none;
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 6px;
+    background-color: #548dd9;
+    cursor: pointer;
+}
+
+
+
+@media only screen and (min-width: 992px) and (max-width: 1199px) {
+
+
+    .box-1,
+    .box-2,
+    .box-3 {
+        width: 40rem;
+        height: 18rem;
+
+    }
+
+    .tag {
+        font-size: 2.5rem;
+    }
+
+    .test {
+        width: 80vw;
+
+    }
+
+    .ans-1 {
+        width: 64rem;
+    }
+
+
+}
+
+@media only screen and (min-width: 768px) and (max-width: 991px) {
+    /* CSS rules */
+
+    .box-1,
+    .box-2,
+    .box-3 {
+        width: 50rem;
+        height: 18rem;
+
+    }
+
+    .test {
+        width: 70vw;
+
+    }
+
+    .ans-1 {
+        width: 50rem;
+    }
+
+    .tag {
+        font-size: 2.3rem;
+    }
+
+    .push {
+        width: 16rem;
+    }
+
+    #datePicker {
+        width: 12rem;
+        font-size: 1.5rem;
+    }
+
+    .history {
+        width: 5rem;
+    }
+
+    #userInput {
+        width: 12rem;
+        font-size: 1.5rem;
+
+    }
+
+    #userInput::placeholder {
+
+        font-size: 1.3rem;
+
+    }
+}
+
+
+@media only screen and (min-width: 576px) and (max-width: 767px) {
+    /* CSS rules */
+
+    .box-1,
+    .box-2,
+    .box-3 {
+        width: 50rem;
+        height: 13rem;
+
+    }
+
+    .tag {
+        font-size: 1.6rem;
+    }
+
+    .push {
+        width: 18rem;
+    }
+
+
+
+    .ans-1 {
+        width: 40rem;
+    }
+
+    .about {
+        width: 32rem;
+
+    }
+
+    .logo {
+        font-size: 1.8rem;
+    }
+
+    .logo-brand {
+        width: 13rem;
+    }
+
+    .rainbow_text {
+        font-size: 3rem;
+    }
+
+    .btn-mode {
+        font-size: 1.3rem;
+    }
+
+    .main-prompt {
+        width: 50rem;
+        height: 3rem;
+
+    }
+}
+
+
+@media only screen and (max-width: 575px) {
+    /* CSS rules */
+
+    .box-1,
+    .box-2,
+    .box-3 {
+        width: 60rem;
+        height: 14rem;
+
+    }
+
+
+    .box-2,
+    .box-3 {
+        width: 60rem;
+    }
+
+    .tag {
+        font-size: 1.6rem;
+        width: 9rem;
+
+    }
+
+    .mg-l {
+        margin-left: -5rem;
+    }
+
+    .about {
+        width: 27rem;
+        margin-left: -3rem;
+        font-size: 1.6rem;
+
+    }
+
+    .ans-1 {
+        width: 30rem;
+    }
+
+    .logo {
+        font-size: 1.6rem;
+    }
+
+
+    .logo::after {
+        font-size: .5rem;
+    }
+
+    .logo-brand {
+        width: 11rem;
+    }
+
+    .rainbow_text {
+        font-size: 2.5rem;
+    }
+
+    .btn-mode {
+        font-size: 1rem;
+    }
+
+    .push {
+        width: 13rem;
+    }
+
+    .main-prompt {
+        width: 35rem;
+        height: 2rem;
+        padding: 1.5rem;
+
+    }
+
+    .prompt-section {
+        height: 85vh;
+    }
+
+    .prompt-screen {
+        height: 67vh;
+    }
+
+    #datePicker {
+        width: 9rem;
+        font-size: 1.2rem;
+    }
+
+    .history {
+        width: 5rem;
+    }
+
+    #userInput {
+        width: 10rem;
+        font-size: 1.2rem;
+
+    }
+
+    #userInput::placeholder {
+
+        font-size: 1rem;
+
+    }
+
+}
