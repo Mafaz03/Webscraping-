@@ -7,5 +7,6 @@ textblob==0.15.3
 openai==0.27.0
 pymongo==4.6.0
 dotenv==0.0.5
+Flask==2.3.2
 os
 certifi
