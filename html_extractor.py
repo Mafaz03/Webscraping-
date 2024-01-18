@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from tqdm import tqdm
 
 def get_html(urls: list[str]) -> (dict[str, str], int):
     """
@@ -16,7 +17,7 @@ def get_html(urls: list[str]) -> (dict[str, str], int):
     failed_fetch = 0  # Counter for failed fetch attempts
 
     # Iterate through each URL in the list
-    for website_idx in range(len(urls)):
+    for website_idx in tqdm(range(len(urls))):
         website = urls[website_idx]
 
         # Send an HTTP GET request to the website

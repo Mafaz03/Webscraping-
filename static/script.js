@@ -10,19 +10,19 @@ const output = document.querySelector(".test");
 const NormalScreen = document.querySelector(".test-2");
 console.log(NormalScreen);
 
-sendBtn.addEventListener("click", function () {
-  let val = prompt.value;
-  console.log(val);
-  if (!val) {
-    return;
-  } else {
-    output.classList.toggle("overlay");
+// sendBtn.addEventListener("click", function () {
+//   let val = prompt.value;
+//   console.log(val);
+//   if (!val) {
+//     return;
+//   } else {
+//     output.classList.toggle("overlay");
 
-    NormalScreen.classList.toggle("hidden");
-  }
+//     NormalScreen.classList.toggle("hidden");
+//   }
 
-  console.log("clcked");
-});
+//   console.log("clcked");
+// });
 
 const LightmodeButton = document.querySelector(".light");
 const DarkmodeButton = document.querySelector(".dark");
@@ -134,30 +134,85 @@ menu.addEventListener("click", function () {
 
 // handling the backend....
 
+// function showLoadingScreen() {
+//   document.querySelector(".loading-screen").style.display = "block";
+//   promptSection.style.display = "none";
+// }
+
+// function hideLoadingScreen() {
+//   document.querySelector(".loading-screen").style.display = "none";
+//   promptSection.style.display = "block";
+// }
+
+// function redirectToResultPage() {
+//   // Redirect to result.html
+//   const checkurl = document.getElementById("urls");
+
+//   if (checkurl.value == "") {
+//     return;
+//   } else {
+//     window.location.href = "/result";
+//     sendData();
+//   }
+// }
 // script.js
-// script.js
+
+function showLoading() {
+  document.querySelector(".loading-screen").style.display = "flex";
+  document.querySelector(".prompt-section").style.display = "none";
+}
+
+function hideLoading() {
+  document.querySelector(".loading-screen").style.display = "none";
+  document.querySelector(".prompt-section").style.display = "flex";
+}
+
 function sendData() {
   const urlsInput = document.getElementById("urls");
+  const promptInput = document.getElementById("prompt");
   console.log("urlsInput.value:", urlsInput.value); // Debug statement
 
   const keywordInput = document.getElementById("keyword");
+  if (urlsInput.value == "") {
+    return;
+  }
+
+  showLoading();
+
   const urls = urlsInput.value.split(",").map((link) => link.trim());
+
   const keyword = keywordInput.value;
+  const prompt = promptInput.value;
 
   // Send data to the backend
+  console.log(prompt);
+  console.log(keyword);
   fetch("/scrape", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ urls, keyword }),
+    body: JSON.stringify({ urls, keyword, prompt }),
   })
-    .then((response) => response.json())
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.text();
+    })
     .then((data) => {
       // Handle the response from the backend if needed
-      console.log(data);
+      console.log("Receved after the responseeee", data);
+      hideLoading();
+
+      window.location.href =
+        "/result?response_complete=" + encodeURIComponent(data);
+      // document.querySelector(
+      //   ".ans-11"
+      // ).innerHTML = `<p class="result">${data.result}</p>`;
     })
     .catch((error) => {
+      // hideLoadingScreen();
       console.error("Error:", error);
     });
 }

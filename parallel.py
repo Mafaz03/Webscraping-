@@ -23,7 +23,7 @@ def get_completion1(prompt, model="gpt-3.5-turbo"):
 
 
 def get_completion2(prompt, model="gpt-3.5-turbo"):
-    openai.api_key = ""
+    openai.api_key = "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"
     messages = [{"role": "system", "content": prompt}]
     response = openai.ChatCompletion.create(
         model=model,

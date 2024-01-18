@@ -151,6 +151,7 @@ body {
 
 .main-prompt {
     width: 70rem;
+    margin-top: 2rem;
     height: 5rem;
     background-color: transparent;
     /* border: 1px solid white; */
@@ -247,7 +248,7 @@ body {
     /* background-color: #4285f4; */
     /* display: flex; */
     width: 50vw;
-    margin-top: 12rem;
+    margin-top: 1rem;
     border-radius: 3rem;
     /* display: none; */
 
@@ -804,5 +805,103 @@ body {
         font-size: 1rem;
 
     }
+
+}
+
+
+.loading-screen {
+    background: #000;
+    width: 100vw;
+    height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 1s;
+    display: none;
+}
+
+.box {
+    height: 100px;
+    width: 100px;
+    border-radius: 50%;
+    border: 3px solid;
+    border-color: orange transparent;
+    animation: spin 1s infinite ease-out;
+}
+
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.ans-11 {
+    width: 100vw;
+    height: 20rem;
+    background-color: #4285f4;
+}
+
+.result {
+    font-size: 1.2rem;
+    color: #000;
+}
+
+
+#urls {
+
+    width: 70rem;
+    height: 4rem;
+    font-size: 1.3rem;
+
+    background-color: transparent;
+    padding: 2rem;
+    border-radius: 1rem;
+}
+
+
+
+#keywordss {
+    width: 70rem;
+    height: 4rem;
+    padding: 2rem;
+    background-color: transparent;
+    border-radius: 1rem;
+    margin-top: 2rem;
+}
+
+
+.all-inputs {
+    margin-top: -13rem;
+    display: flex;
+    flex-direction: column;
+    ;
+}
+
+.check-p {
+    position: relative;
+}
+
+.send {
+    position: absolute;
+    top: 42%;
+}
+
+
+
+.close-btn {
+    width: 10rem;
+    height: 5rem;
+    font-size: 2rem;
+    align-self: end;
+
+}
+
+.close-div {
+    background-color: #000;
 
 }

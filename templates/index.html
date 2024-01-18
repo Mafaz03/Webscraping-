@@ -19,23 +19,35 @@
         </div>
 
     
-        <img class="logo-brand" src="logo.png" alt="">
+        <img class="logo-brand" src="../static/logo.png" alt="">
 
         <div>
             <button class="theme-btn light btn-mode active" title="Light mode">
-                <img src="images.png" alt="sun">
+                <img src="../static/images.png" alt="sun">
               </button>
               <button class="theme-btn dark btn-mode hide "  title="Dark mode">
-                <img src="images (1).png" alt="moon">
+                <img src="../static/images (1).png" alt="moon">
               </button>
         </div>
 
     
     </header>
 
-  
 
+   
+    <div class="loading-screen">
+            <button onclick="hideLoading()" class="close-btn">Close</button>
+            <div class="box">
+            </div>
+        </div>
+
+
+    
+    
     <section class="prompt-section dark-mode-bg">
+        <!-- <div class="ans-11">
+
+        </div> -->
         <div class="push dark-mode-bg"> 
             <div class="total">
 
@@ -57,7 +69,7 @@
 
                 <h1 class='rainbow_text animated'>Start Prompting</h1>
                 <h2 class="about ">Just Paste the Link in the Prompt</h2>
-                <input type="text" id="urls">
+
 
                 <div class="flex mg-l">
 
@@ -74,8 +86,9 @@
                 </div>
             </div>
         </div>
+       
 
-            <div class="test dark-mode-bg-ans">
+            <!-- <div class="test dark-mode-bg-ans">
                 <div class="ans-1 ">This is how the Link is gonna popup.</div>
 
               <div class="ans-1">The whole window is scrollable..</div>
@@ -90,7 +103,7 @@
               <div class="ans-1">This is the ans Lorem ipsum dolor sit amet consectetur adipisicing elit. Ratione, suscipit laboriosam dolorum blanditiis temporibus nostrum voluptatem iste! Soluta consequuntur reprehenderit vero a natus facere voluptatibus quia quaerat, dolorem libero quis! Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eius enim cumque fugiat obcaecati ad a architecto quos quod, laboriosam omnis expedita reiciendis tenetur sequi libero aliquid excepturi quo odit nam.</div>
 
               <div class="ans-1">This is the ans Lorem ipsum dolor sit amet consectetur adipisicing elit. Ratione, suscipit laboriosam dolorum blanditiis temporibus nostrum voluptatem iste! Soluta consequuntur reprehenderit vero a natus facere voluptatibus quia quaerat, dolorem libero quis! Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eius enim cumque fugiat obcaecati ad a architecto quos quod, laboriosam omnis expedita reiciendis tenetur sequi libero aliquid excepturi quo odit nam.</div>
-            </div>
+            </div> -->
               
 
 
@@ -98,11 +111,26 @@
         
         <div class="prompt dark-mode-screen">
 
-            <input class="main-prompt dark-mode-input" id="keyword" placeholder="Enter Your prompt here" type="text">
-            <span style="font-size: 30px;" class="send material-symbols-outlined" onclick="sendData()">
-                send
-                </span>
+            <div class="all-inputs">
+                <input placeholder="Enter the Links" type="text" id="urls" class="dark-mode-input">
+                <!-- <input placeholder="Enter the keyword" type="text" id="keywordss" class="dark-mode-input"> -->
+
+                <input class="main-prompt dark-mode-input" id="keyword" placeholder="Enter Your keyword" type="text">
+                <div class="check-p">
+
+                    <input class="main-prompt dark-mode-input" id="prompt" placeholder="Enter Your prompt here" type="text">
+                    <span style="font-size: 30px; " class="send material-symbols-outlined" onclick="sendData()" id="send-btn">
+                        send
+                    </span>
+                </div>
+
+            </div>
+    
           </div>
+
+
+          
+
     </section>
 
     <script src="https://kit.fontawesome.com/d9d32e1e0f.js" crossorigin="anonymous"></script>

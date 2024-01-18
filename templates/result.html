@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Result</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        font-size: 62.5%;
+      }
+      body{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .ans-1 {
+        font-size: 1.5rem;
+        font-family: "Roboto", sans-serif;
+        /* color: white; */
+        width: 70rem;
+        border: dotted #555 1px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1.3;
+        border-radius: 2rem;
+        margin-top: 1rem;
+      }
+
+      .test {
+        display: flex;
+        flex-direction: column;
+        width: 100vw;
+        align-items: center;
+        overflow: auto;
+        transition: all 1s;
+
+        transition: background-color 0.5s ease, color 0.5s ease;
+      }
+
+      .test::-webkit-scrollbar {
+        width: 12px;
+      }
+
+      .test::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.892);
+        border-radius: 10px;
+      }
+
+      .test::-webkit-scrollbar-thumb {
+        border-radius: 10px;
+        -webkit-box-shadow: inset 0 0 8px rgb(190, 179, 179);
+      }
+
+      .test::-webkit-scrollbar-thumb:hover {
+        -webkit-box-shadow: inset 0 0 6px rgb(250, 250, 250);
+      }
+
+      .test {
+        /* display: none; */
+        /* opacity: 0; */
+        transition: opacity 1s ease, linear 1s;
+
+        /* opacity: 0; */
+        /* visibility: hidden; */
+        /* height: 0; */
+        overflow: hidden;
+      }
+
+      .dark-mode-bg-ans {
+        background-color: #000;
+        color: #fff;
+        transition: all 0.3s ease-in;
+      }
+
+      .light-mode-bg-ans {
+        background-color: #f0f4f9;
+        color: #000;
+        transition: all 0.3s ease-in;
+      }
+    </style>
+  </head>
+  <body class="dark-mode-bg-ans">
+   
+    <div class="ans-1">
+      <p>{{result_data|safe}}</p>
+    </div>
+  </body>
+</html>
+
+
+
+
+ 

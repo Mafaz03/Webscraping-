@@ -1,19 +1,32 @@
 # Set your OpenAI API key
 # api_key = input("Enter api key: ")
 import openai
+from openai import OpenAI
 
-api_key = input("Enter your api key: ")
+api_key = "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"
+client = OpenAI(api_key = api_key)
 
 openai.api_key = api_key
 
-def get_completion(prompt, model="gpt-3.5-turbo"):
-    messages = [{"role": "system", "content": prompt}]
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=messages,
-        temperature=0,
+#def get_completion(prompt, model="gpt-3.5-turbo"):
+#    messages = [{"role": "system", "content": prompt}]
+#    response = openai.ChatCompletion.create(
+#        model=model,
+#        messages=messages,
+#        temperature=0,
+#    )
+#    return response.choices[0].message["content"]
+
+def get_completion2(prompt, model = "gpt-3.5-turbo-1106"):
+    completion = client.chat.completions.create(
+    model="gpt-3.5-turbo-1106",
+    messages=[
+        {"role": "system", "content": "You are news reporter"},
+        {"role": "user", "content": f"{prompt}"}
+        ]
     )
-    return response.choices[0].message["content"]
+
+    return completion.choices[0].message.content
 
 
 
