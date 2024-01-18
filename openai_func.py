@@ -3,7 +3,7 @@
 import openai
 from openai import OpenAI
 
-api_key = ""                                                    # Enter key here
+api_key = ""                                            # Enter key here
 client = OpenAI(api_key = api_key)
 
 openai.api_key = api_key

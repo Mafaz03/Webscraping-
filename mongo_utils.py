@@ -18,7 +18,7 @@ def import_from_mongo(date_db_name:str, collection_db_name:str, columns: list) -
 
     """
 
-    client = MongoClient(MONGO_STRIGN,tlsCAFile=ca)
+    client = MongoClient("mongodb+srv://Mafaz2:mafaz@petra.ewsack2.mongodb.net/?retryWrites=true&w=majority",tlsCAFile=ca)
 
     db = client[date_db_name]
     collection = db[collection_db_name]
@@ -55,7 +55,7 @@ def save_to_mongo(date_db_name:str, collection_db_name:str, data):
     """
     try:
 
-        client = MongoClient(MONGO_STRIGN,tlsCAFile=ca)
+        client = MongoClient("mongodb+srv://Mafaz2:mafaz@petra.ewsack2.mongodb.net/?retryWrites=true&w=majority",tlsCAFile=ca)
 
         db = client[date_db_name]
         collection = db[collection_db_name]
