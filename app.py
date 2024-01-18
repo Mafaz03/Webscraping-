@@ -29,6 +29,10 @@ from openai_func import *
 from get_date import *
 # from parallel import *
 from mongo_utils import import_from_mongo, save_to_mongo
+from url_stats import plot_date
+
+import matplotlib
+matplotlib.use('agg')
 
 
 
@@ -157,6 +161,10 @@ def scrape():
         save_to_mongo(date_db_name, collection_db_name, data = data)
 
         urls_date_df = pd.merge(urls_from_extraction, mongo_date_df, on='url', how='inner').sort_values(by="Date",ascending=False)
+        
+        # Columns
+        print(urls_date_df.columns)
+        plot_date(urls_date_df, save_path="Plots/Hist_and_Pie.jpg")
 
         # print(urls_date_df.isna().sum())
 
