@@ -4,7 +4,7 @@ htmldate==0.9.0
 beautifulsoup4==4.10.0
 tqdm==4.62.3
 textblob==0.15.3
-openai==0.27.0
+openai==1.8.0
 pymongo==4.6.0
 dotenv==0.0.5
 os
