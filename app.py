@@ -1,5 +1,6 @@
 # app.py
 
+
 ## Importing Dependencies
 from time import time
 app_start_time = time()
@@ -72,16 +73,24 @@ def scrape():
     print(f"Senching for keyword: {keyword}")
     print(f"prompt is: {prompt}")
 
-    excluded_domains = r'(magicbricks|play\.google|facebook\.com|twitter\.com|instagram\.com|linkedin\.com|youtube\.com|\.gov|\.org|policy|terms|buy|horoscope|web\.whatsapp\.com|\.(png|jpg|jpeg|gif|bmp|tiff|webp))'
+    S = " Search results "
+    print("\n\n"+S.center(100, '=')+"\n")
+
+    excluded_domains = r'(magicbricks|play\.google|facebook\.com|twitter\.com|instagram\.com|linkedin\.com|youtube\.com|\.gov|\.org|policy|terms|buy|horoscope|web\.whatsapp\.com|\.(png|jpg|jpeg|gif|bmp|tiff|webp|443))'
     search_extras = ["?s=", "/search/", "/search?q=", "/topic/"]
     search_result_url = generate_urls_with_exclusions(base_urls=url , search_extras=search_extras, 
-                                  keywords=[keyword],excluded_domains=excluded_domains)
+                                  keywords=keyword.split(','),excluded_domains=excluded_domains)
 
     search_result_url = list(search_result_url)
     if len(search_result_url) >= 0:
-        S = " Search results "
-        print("\n\n"+S.center(100, '=')+"\n")
         print("\n".join(search_result_url[:5]))
+
+    scraper = WebScraper2(sub_url_size = 1 , keywords = keyword)
+    urls_list_str = ",".join(search_result_url)
+    inside_urls1, failed_fetch1, sub_url_size1, total_size1 = scraper.get_suburls2(urls_list_str)
+    print("Failed Fetch:", failed_fetch1)
+    print("Splits:", len(inside_urls1))
+    print("Tree size:", total_size1)
 
     ## Extracting sub urls
     urls_list_str = ",".join(url)
@@ -101,8 +110,8 @@ def scrape():
     else:
         ## Joining sub urls into one single list
         website_urls = [item for sublist in list(inside_urls.values()) for item in sublist]
-            
-        website_urls = search_result_url + website_urls
+        website_urls1 = [item for sublist in list(inside_urls1.values()) for item in sublist]
+        website_urls = website_urls1 + website_urls
 
         S = " Importing Database for Date "
         print("\n\n"+S.center(100, '=')+"\n")
@@ -220,7 +229,8 @@ def scrape():
             url_html_df_date_sorted = mongo_html_df[mongo_html_df['url'].isin(list(df_filtered_by_date["url"]))]
 
             page = 1
-            url_html_df_date_sorted_10 = url_html_df_date_sorted[(page - 1) * 10 : 10 * page]  # Only 10 at a time
+            amount_of_content = 20
+            url_html_df_date_sorted_10 = url_html_df_date_sorted[(page - 1) * amount_of_content : amount_of_content * page]  # Only 10 at a time
 
             url_html_dict = url_html_df_date_sorted_10.set_index('url')['Html'].to_dict()
             try:
