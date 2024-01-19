@@ -30,10 +30,10 @@ from get_date import *
 # from parallel import *
 from mongo_utils import import_from_mongo, save_to_mongo
 from url_stats import plot_date
+from search_results import *
 
 import matplotlib
 matplotlib.use('agg')
-
 
 
 from keyword_extraction import keyword_extractor_paragraph as kep
@@ -73,6 +73,16 @@ def scrape():
     print(f"Senching for keyword: {keyword}")
     print(f"prompt is: {prompt}")
 
+    excluded_domains = r'(magicbricks|play\.google|facebook\.com|twitter\.com|instagram\.com|linkedin\.com|youtube\.com|\.gov|\.org|policy|terms|buy|horoscope|web\.whatsapp\.com|\.(png|jpg|jpeg|gif|bmp|tiff|webp))'
+    search_extras = ["?s=", "/search/", "/search?q=", "/topic/"]
+    search_result_url = generate_urls_with_exclusions(base_urls=url , search_extras=search_extras, 
+                                  keywords=[keyword],excluded_domains=excluded_domains)
+
+    search_result_url = list(search_result_url)
+    if len(search_result_url) >= 0:
+        S = " Search results "
+        print("\n\n"+S.center(100, '=')+"\n")
+        print("\n".join(search_result_url[:5]))
 
     ## Extracting sub urls
     urls_list_str = ",".join(url)
@@ -83,14 +93,18 @@ def scrape():
     print("Failed Fetch:", failed_fetch)
     print("Splits:", len(inside_urls))
     print("Tree size:", total_size)
-    
+
+        
+
     if len(url) - total_size == 0:
         response_complete = "There was nothing to display\n\nKeywords did'nt match any urls\nPlease add additional urls"
     
     else:
         ## Joining sub urls into one single list
         website_urls = [item for sublist in list(inside_urls.values()) for item in sublist]
-        
+            
+        website_urls = search_result_url + website_urls
+
         S = " Importing Database for Date "
         print("\n\n"+S.center(100, '=')+"\n")
 
@@ -171,7 +185,7 @@ def scrape():
         S = " Filtering by date "
         print("\n\n"+S.center(100, '=')+"\n")
 
-        start_date = pd.to_datetime('14-09-2023',format='%d-%m-%Y')
+        start_date = pd.to_datetime('14-09-2022',format='%d-%m-%Y')
         end_date = pd.to_datetime('01-11-2024',format='%d-%m-%Y')
 
         df_filtered_by_date = urls_date_df[(urls_date_df["Date"] >= start_date) & (urls_date_df["Date"] <= end_date)]
