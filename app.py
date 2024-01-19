@@ -164,7 +164,7 @@ def scrape():
         
         # Columns
         print(urls_date_df.columns)
-        plot_date(urls_date_df, save_path="Plots/Hist_and_Pie.jpg")
+        plot_date(urls_date_df, save_path=f"Plots/{datetime.now()}.jpg")
 
         # print(urls_date_df.isna().sum())
 
