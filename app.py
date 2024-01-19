@@ -1,6 +1,5 @@
 # app.py
 
-
 ## Importing Dependencies
 from time import time
 app_start_time = time()
