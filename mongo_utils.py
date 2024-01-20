@@ -30,7 +30,7 @@ def import_from_mongo(date_db_name:str, collection_db_name:str, columns: list) -
     Nan_to_empty_str[columns[1]] = np.array(Nan_to_empty_str[list_of_extra_cols]).sum(axis=1)       # Adding rows row wise
     mongo_df = Nan_to_empty_str.drop(list_of_extra_cols, axis = 1)                                  # Removing extra columns
     if columns[1] == "Date":
-        mongo_df['Date'] = pd.to_datetime(mongo_df['Date'], dayfirst=True)                          # Converting Date to Datetime
+        mongo_df['Date'] = pd.to_datetime(mongo_df['Date'], dayfirst=True, infer_datetime_format=True, errors='coerce')  # Converting Date to Datetime
         mongo_df = mongo_df.sort_values(by='Date', ascending=False)                                 # Sorting by Date
     mongo_df.columns = columns                                                                      # Renaming Column name
     mongo_df = mongo_df.dropna()                                                                    # Dropping Null values from mongo (most probably not useful urls)
