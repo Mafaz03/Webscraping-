@@ -1,14 +1,12 @@
 console.log("connected");
 
-const prompt = document.querySelector(".main-prompt");
+const prompt = document.querySelectorAll(".main-prompt");
 const displayScreen = document.querySelector(".prompt-screen");
 const sendBtn = document.querySelector(".send");
 const section = document.querySelector(".prompt");
-console.log(section);
-const output = document.querySelector(".test");
 
+const output = document.querySelector(".test");
 const NormalScreen = document.querySelector(".test-2");
-console.log(NormalScreen);
 
 // sendBtn.addEventListener("click", function () {
 //   let val = prompt.value;
@@ -36,6 +34,7 @@ const logoProj = document.querySelector(".logo");
 const ans = document.querySelectorAll(".ans-1");
 
 const promptSection = document.querySelector(".prompt-section");
+console.log(promptSection);
 
 const modeChanger = () => {
   topNav.classList.toggle("dark-mode-bg");
@@ -47,11 +46,13 @@ const modeChanger = () => {
   displayScreen.classList.toggle("dark-mode-screen");
   displayScreen.classList.toggle("light-mode-screen");
 
-  output.classList.toggle("dark-mode-bg-ans");
-  output.classList.toggle("light-mode-bg-ans");
+  // output.classList.toggle("dark-mode-bg-ans");
+  // output.classList.toggle("light-mode-bg-ans");
 
-  prompt.classList.toggle("dark-mode-input");
-  prompt.classList.toggle("light-mode-input");
+  prompt.forEach((prom) => {
+    prom.classList.toggle("dark-mode-input");
+    prom.classList.toggle("light-mode-input");
+  });
 
   promptSection.classList.toggle("dark-mode-bg");
   promptSection.classList.toggle("light-mode-bg");
