@@ -1,17 +1,14 @@
 import requests
 import re
 from bs4 import BeautifulSoup
-import ssl
 from tqdm import tqdm
-
-
 
 class WebScraper1:
     """
-    Class WebScraper
+    WebScraper1 class for extracting sub-URLs without keyword filtering.
 
     Args:
-    sub_url_size: Number of self iteration/ tree branches.
+    sub_url_size (int): Number of self iterations/tree branches.
     """
     def __init__(self, sub_url_size):
         self.inside_urls = dict()  # Storing inside URLs as a dict for uniqueness
@@ -20,18 +17,17 @@ class WebScraper1:
 
     def get_suburls1(self, urls_list):
         """
-        Gets as many urls as mentioned by the sub_url_size.
+        Gets as many URLs as mentioned by the sub_url_size.
 
         Args:
-        urls_list: Top urls.
+        urls_list (str): Top URLs.
 
         Returns:
-        inside_urls: [list] All available urls.
-        failed_fetch: amount of urls that couldnt be fetched due to some error.
-        sub_url_size: tree split.
-        total_size: amount of urls present in inside_urls.
+        inside_urls (dict): All available URLs.
+        failed_fetch (int): Amount of URLs that couldn't be fetched due to some error.
+        sub_url_size (int): Tree split.
+        total_size (int): Amount of URLs present in inside_urls.
         """
-        
         urls_list = urls_list.split(',')
         self.inside_urls[0] = urls_list
         for i in range(self.sub_url_size):
@@ -43,11 +39,10 @@ class WebScraper1:
                         soup = BeautifulSoup(response.content, 'html.parser')
                         all_links = soup.find_all('a', href=True)
                         excluded_domains = r'(magicbricks|play\.google|facebook\.com|twitter\.com|instagram\.com|linkedin\.com|youtube\.com|\.gov|\.org|policy|terms|buy|horoscope|web\.whatsapp\.com)'
-                        # excluded_domains will not take urls into account with these domains
+                        # Excluded_domains will not take URLs into account with these domains
                         for link in all_links:
                             href = link['href']
                             if re.match(r'https?://', href) and not re.search(excluded_domains, href):
-                                # print(href)
                                 temp_inside_urls.append(href)
                     else:
                         self.failed_fetch += 1
@@ -55,18 +50,17 @@ class WebScraper1:
                     print(f"Error fetching {url_}: {e}")
                     self.failed_fetch += 1
             self.inside_urls[i + 1] = temp_inside_urls
-        total_size = 0
-        for i in self.inside_urls:
-            total_size += len(self.inside_urls[i])
+        total_size = sum(len(self.inside_urls[i]) for i in self.inside_urls)
         return self.inside_urls, self.failed_fetch, self.sub_url_size, total_size
     
 
 class WebScraper2:
     """
-    Class WebScraper
+    WebScraper2 class for extracting sub-URLs with keyword filtering.
 
     Args:
-    sub_url_size: Number of self iteration/ tree branches.
+    sub_url_size (int): Number of self iterations/tree branches.
+    keywords (str): Keywords for filtering URLs.
     """
     def __init__(self, sub_url_size, keywords):
         self.inside_urls = dict()  # Storing inside URLs as a dict for uniqueness
@@ -76,18 +70,17 @@ class WebScraper2:
 
     def get_suburls2(self, urls_list):
         """
-        Gets as many urls as mentioned by the sub_url_size.
+        Gets as many URLs as mentioned by the sub_url_size with keyword filtering.
 
         Args:
-        urls_list: Top urls.
+        urls_list (str): Top URLs.
 
         Returns:
-        inside_urls: [list] All available urls.
-        failed_fetch: amount of urls that couldnt be fetched due to some error.
-        sub_url_size: tree split.
-        total_size: amount of urls present in inside_urls.
+        inside_urls (dict): All available URLs.
+        failed_fetch (int): Amount of URLs that couldn't be fetched due to some error.
+        sub_url_size (int): Tree split.
+        total_size (int): Amount of URLs present in inside_urls.
         """
-        
         urls_list = urls_list.split(',')
         self.inside_urls[0] = urls_list
         for i in range(self.sub_url_size):
@@ -99,11 +92,10 @@ class WebScraper2:
                         soup = BeautifulSoup(response.content, 'html.parser')
                         all_links = soup.find_all('a', href=True)
                         excluded_domains = r'(magicbricks|play\.google|facebook\.com|twitter\.com|instagram\.com|linkedin\.com|youtube\.com|\.gov|\.org|policy|terms|buy|horoscope|web\.whatsapp\.com)'
-                        # excluded_domains will not take urls into account with these domains
+                        # Excluded_domains will not take URLs into account with these domains
                         for link in all_links:
                             href = link['href']
                             if re.match(r'https?://', href) and not re.search(excluded_domains, href):
-                                # print(href)
                                 temp_inside_urls.append(href)
                     else:
                         self.failed_fetch += 1
@@ -111,14 +103,14 @@ class WebScraper2:
                     print(f"Error fetching {url_}: {e}")
                     self.failed_fetch += 1
             
+            # Filtering URLs based on keywords
             temp_inside_urls = [url for url in temp_inside_urls if any(keyword in url for keyword in self.keywords)]
             temp_inside_urls = list(set(temp_inside_urls))
             self.inside_urls[i + 1] = temp_inside_urls
             
-        total_size = 0
-        for i in self.inside_urls:
-            total_size += len(self.inside_urls[i])
+        total_size = sum(len(self.inside_urls[i]) for i in self.inside_urls)
         return self.inside_urls, self.failed_fetch, self.sub_url_size, total_size
+
 """
 # Example Usage:
 urls_list = ["https://www.khaleejtimes.com"] # Can add as many urls as needed, keep it below 5 for faster executing
