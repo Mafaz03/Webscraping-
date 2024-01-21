@@ -42,3 +42,4 @@ def fetch_date_from_url(url: str):
 # Example usage:
 # url = "https://constructionreviewonline.com/concrete/how-permanent-christmas-lights-can-transform-your-phoenix-home/"
 # print(fetch_date_from_url(url=url))
+
