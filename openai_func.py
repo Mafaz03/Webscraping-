@@ -1,5 +1,12 @@
 # Set your OpenAI API key
+import openai
+from openai import OpenAI
+
+
 api_key = ""  # Enter your OpenAI API key here
+
+client = OpenAI(api_key = api_key)
+openai.api_key = api_key
 
 # Initialize the OpenAI API client
 openai.api_key = api_key
@@ -24,25 +31,4 @@ def get_completion2(prompt, model="gpt-3.5-turbo-1106"):
     )
     return completion.choices[0].message.content
 
-def split_dict(dictionary, n_parts):
-    """
-    Splits a dictionary into a specified number of sub-dictionaries.
 
-    Parameters:
-    - dictionary (dict): The original dictionary to be split.
-    - n_parts (int): The number of parts to split the dictionary into.
-
-    Returns:
-    - list: A list of sub-dictionaries resulting from the split.
-    """
-    # Calculate the number of items in each part
-    items_per_part = len(dictionary) // n_parts
-    
-    # Split the dictionary keys and values into sub-lists
-    keys_split = [list(dictionary.keys())[i:i + items_per_part] for i in range(0, len(dictionary), items_per_part)]
-    values_split = [list(dictionary.values())[i:i + items_per_part] for i in range(0, len(dictionary), items_per_part)]
-    
-    # Create sub-dictionaries
-    sub_dicts = [{k: v for k, v in zip(keys, values)} for keys, values in zip(keys_split, values_split)]
-    
-    return sub_dicts
