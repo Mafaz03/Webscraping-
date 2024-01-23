@@ -4,20 +4,20 @@ from tqdm import tqdm
 
 def get_html(urls: list[str]) -> (dict[str, str], int):
     """
-    Function that takes in URLs and returns the HTML content within them.
-
+    Fetches HTML content from a list of URLs and returns a dictionary with URL as key and HTML content as value.
+    
     Args:
-    urls: List of all URLs.
-
+    - urls (list[str]): A list of URLs to fetch HTML content from.
+    
     Returns:
-    website_content: Dictionary {url: html_content}.
-    failed_fetch: Number of websites that couldn't be accessed during fetching HTML.
+    - Tuple: A dictionary containing HTML content for each URL and an integer representing the count of failed fetch attempts.
     """
-    website_content = {}  # Dictionary to store HTML content for each URL
-    failed_fetch = 0  # Counter for failed fetch attempts
+    # Initialize variables
+    website_content = {}  # Dictionary to store HTML content with URL as the key
+    failed_fetch = 0      # Counter for failed fetch attempts
 
     # Iterate through each URL in the list
-    for website_idx in tqdm(range(len(urls))):
+    for website_idx in tqdm(range(len(urls)), desc="Fetching HTML"):
         website = urls[website_idx]
 
         # Send an HTTP GET request to the website
@@ -31,6 +31,7 @@ def get_html(urls: list[str]) -> (dict[str, str], int):
         else:
             # If the request was not successful, increment the failed_fetch counter
             failed_fetch += 1
+            continue  # Skip further processing for this URL
 
         # Split text into lines, filter out empty lines, and join the non-empty lines
         lines = text.splitlines()
@@ -47,5 +48,5 @@ def get_html(urls: list[str]) -> (dict[str, str], int):
 text2, failed_fetch_html = get_html(["https://timesofindia.indiatimes.com/india/whole-world-waiting-for-22nd-january-pm-modi-in-ayodhya/articleshow/106388185.cms"])
 print(text2)
 """
+# Note: Uncomment the use-case example when using this code.
 
-# Note: Uncomment the usecase example when using this code.
