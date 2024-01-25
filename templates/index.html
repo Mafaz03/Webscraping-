@@ -50,14 +50,14 @@
         </div> -->
         <div class="push dark-mode-bg"> 
             <div class="total">
+                <form  method="post">
 
-                <input type="date" id="datePicker" />
-                <button class="history" onclick="showHistory()">Show History</button>
-                <div class="chat-history" id="chatHistory">
-                    <!-- Chat messages will appear here -->
-                </div>
-                <input type="text" id="userInput" placeholder="Type a message..." />
-                <button class="checksend" onclick="sendMessage()">Send</button>
+                    <label  style="font-size: 1.5rem; " for="from_date">From Date (dd-mm-yyyy):</label>
+                    <input type="date" id="datePicker" name="from_date" required />
+                    <input type="date" id="userInput" name="to_date" required />
+                    <label  style="font-size: 1.5rem; " for="from_date">To Date (dd-mm-yyyy):</label>
+                    <button type="submit" class="history" >Search</button>
+                </form>
             </div>
         </div>
         <div class="prompt-screen dark-mode-screen ">
@@ -112,6 +112,9 @@
         <div class="prompt dark-mode-screen">
 
             <div class="all-inputs">
+
+
+
 
                 <!-- <textarea type="text"  cols="30" rows="10"></textarea> -->
                 <input class="main-prompt dark-mode-input" placeholder="Enter the Links" type="text" id="urls" col=30 rows=10 class="dark-mode-input">

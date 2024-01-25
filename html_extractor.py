@@ -2,7 +2,22 @@ import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-def get_html(urls: list[str]) -> (dict[str, str], int):
+def is_english(text):
+    """
+    Check if the given text contains mostly English characters.
+    """
+    english_count = sum(1 for char in text if ord(char) < 128)
+    non_english_count = len(text) - english_count
+    return english_count >= non_english_count
+
+def check_failure(text, failed_txt):
+    """
+    Check if any of the failure strings exist in the given text.
+    """
+    return any(failure_str.lower() in text.lower() for failure_str in failed_txt)
+
+
+def get_html(urls: list[str], mode_of_search: str = None) -> (dict[str, str], int):
     """
     Function that takes in URLs and returns the HTML content within them.
 
@@ -16,6 +31,8 @@ def get_html(urls: list[str]) -> (dict[str, str], int):
     website_content = {}  # Dictionary to store HTML content for each URL
     failed_fetch = 0  # Counter for failed fetch attempts
 
+    failed_txt = ["Sorry", "not found", "oops", "try again", "failed", "error"]
+
     # Iterate through each URL in the list
     for website_idx in tqdm(range(len(urls))):
         website = urls[website_idx]
@@ -28,17 +45,27 @@ def get_html(urls: list[str]) -> (dict[str, str], int):
             # Parse the HTML content using BeautifulSoup
             soup = BeautifulSoup(response.content, 'html.parser')
             text = soup.get_text()
+
+            # Check if the text contains mostly English characters
+            if is_english(text):
+                # Split text into lines, filter out empty lines, and join the non-empty lines
+                lines = text.splitlines()
+                non_empty_lines = [line for line in lines if line.strip()]
+                result = '\n'.join(non_empty_lines)
+
+                if mode_of_search == "Search Bar Scrape":
+                    if check_failure(result, failed_txt):
+                        pass
+                    else:
+                        website_content[website] = result
+                else:
+                    # Store the result in the dictionary with the URL as the key
+                    website_content[website] = result
+            else:
+                pass  # Not saving non-English content
         else:
             # If the request was not successful, increment the failed_fetch counter
             failed_fetch += 1
-
-        # Split text into lines, filter out empty lines, and join the non-empty lines
-        lines = text.splitlines()
-        non_empty_lines = [line for line in lines if line.strip()]
-        result = '\n'.join(non_empty_lines)
-
-        # Store the result in the dictionary with the URL as the key
-        website_content[website] = result
 
     return website_content, failed_fetch
 

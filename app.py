@@ -31,10 +31,12 @@ from get_date import *
 from mongo_utils import import_from_mongo, save_to_mongo
 from url_stats import plot_date
 from search_results import *
-
+from preprocess import *
+import api_keys
 import matplotlib
 matplotlib.use('agg')
 
+import serpapi
 
 from keyword_extraction import keyword_extractor_paragraph as kep
 
@@ -68,50 +70,124 @@ def scrape():
     keyword = data.get('keyword')
     prompt=data.get('prompt')
 
+    keyword_list = [i.strip() for i in keyword.split(",")]
+
+    from_date_str = data.get('from_date')
+    to_date_str = data.get('to_date')
+
+
+    from_date = datetime.strptime(from_date_str, '%Y-%m-%d').strftime('%d-%m-%Y')
+    to_date = datetime.strptime(to_date_str, '%Y-%m-%d').strftime('%d-%m-%Y')
+
+    print("From",from_date)
+    print("to",to_date)
+
     # Replace the following print statements with your actual scraping logic
     print(f"Scraping URL: {url}")
     print(f"Senching for keyword: {keyword}")
     print(f"prompt is: {prompt}")
 
-    S = " Search results "
-    print("\n\n"+S.center(100, '=')+"\n")
+    SEARCH_BAR_SCRAPE = 1
+    GENERAL_DEEP_SCRAPE = 1 
+    ADVANCED_SEARCH = 1
 
-    excluded_domains = r'(magicbricks|play\.google|facebook\.com|twitter\.com|instagram\.com|linkedin\.com|youtube\.com|\.gov|\.org|policy|terms|buy|horoscope|web\.whatsapp\.com|\.(png|jpg|jpeg|gif|bmp|tiff|webp|443))'
-    search_extras = ["?s=", "/search/", "/search?q=", "/topic/"]
-    search_result_url = generate_urls_with_exclusions(base_urls=url , search_extras=search_extras, 
-                                  keywords=keyword.split(','),excluded_domains=excluded_domains)
+    inside_urls1 = []
+    inside_urls2 = []
+    inside_urls3 = []
 
-    search_result_url = list(search_result_url)
-    if len(search_result_url) >= 0:
-        print("\n".join(search_result_url[:5]))
+    website_urls1 = []
+    website_urls2 = []
+    website_urls3 = []
 
-    scraper = WebScraper2(sub_url_size = 1 , keywords = keyword)
-    urls_list_str = ",".join(search_result_url)
-    inside_urls1, failed_fetch1, sub_url_size1, total_size1 = scraper.get_suburls2(urls_list_str)
-    print("Failed Fetch:", failed_fetch1)
-    print("Splits:", len(inside_urls1))
-    print("Tree size:", total_size1)
+    if SEARCH_BAR_SCRAPE == 1:
+        S = " Search Bar Scrape "
+        print("\n\n"+S.center(100, '=')+"\n")
+        base_urls = url
 
-    ## Extracting sub urls
-    urls_list_str = ",".join(url)
-    scraper = WebScraper2(sub_url_size = 3 , keywords = keyword)
-                
-    inside_urls, failed_fetch, sub_url_size, total_size = scraper.get_suburls2(urls_list_str)
-    # print("Inside URLs:", inside_urls)
-    print("Failed Fetch:", failed_fetch)
-    print("Splits:", len(inside_urls))
-    print("Tree size:", total_size)
+        search_extras = ["?s=", "/search/", "/search?q=", "/topic/"]
+        keywords_list = keyword.split(',')
+        excluded_domains = r'(magicbricks|443|play\.google|facebook\.com|twitter\.com|instagram\.com|linkedin\.com|youtube\.com|\.gov|\.org|policy|terms|buy|horoscope|web\.whatsapp\.com|\.(png|jpg|jpeg|gif|bmp|tiff|webp))'
+        result_urls = generate_urls_with_exclusions(base_urls, search_extras, keywords_list, excluded_domains)
+        print('\n'.join(result_urls))
 
-        
+        search_html = get_html(list(result_urls), mode_of_search="Search Bar Scrape")
+        print(f"Failed to get html: {search_html[1]}")
+        search_html_content = search_html[0]
 
-    if len(url) - total_size == 0:
-        response_complete = "There was nothing to display\n\nKeywords did'nt match any urls\nPlease add additional urls"
+        base_url_html_content = get_html(urls=base_urls)[0]
+        search_html = prepend_dict(search_html_content, base_url_html_content)
+        search_html_pruned = keep_first_occurrence(search_html)
+
+        print("Pruning Completed", len(search_html) - len(search_html_pruned), "Deleted")
     
-    else:
+        urls_list = list(search_html_pruned.keys())
+        urls_list_str = ",".join(urls_list)
+
+        scraper = WebScraper2(sub_url_size=1 , keywords=keyword)
+        inside_urls, failed_fetch, sub_url_size, total_size = scraper.get_suburls2(urls_list_str)
+
+        # print("Inside URLs:", inside_urls)
+        print("Failed Fetch:", failed_fetch)
+        print("Splits:", len(inside_urls))
+        print("Tree size:", total_size)
+
         ## Joining sub urls into one single list
-        website_urls = [item for sublist in list(inside_urls.values()) for item in sublist]
-        website_urls1 = [item for sublist in list(inside_urls1.values()) for item in sublist]
-        website_urls = website_urls1 + website_urls
+        website_urls1 = inside_urls[1]
+        
+        print("\n".join(website_urls1[:10]))
+
+    if GENERAL_DEEP_SCRAPE == 1:
+
+        S = " General Deep Scrape "
+        print("\n\n"+S.center(100, '=')+"\n")
+
+        ## Extracting sub urls
+        urls_list_str = ",".join(url)
+        scraper = WebScraper2(sub_url_size = 3 , keywords = keyword)
+                    
+        inside_urls2, failed_fetch, sub_url_size, total_size2 = scraper.get_suburls2(urls_list_str)
+        # print("Inside URLs:", inside_urls)
+        print("Failed Fetch:", failed_fetch)
+        print("Splits:", len(inside_urls2))
+        print("Tree size:", total_size2)
+
+        ## Joining sub urls into one single list
+        website_urls2 = [item for sublist in list(inside_urls2.values()) for item in sublist]
+        print("\n".join(website_urls2[3:13]))
+        
+    if ADVANCED_SEARCH == 1:
+
+        S = " Advanced Search "
+        print("\n\n"+S.center(100, '=')+"\n")
+        
+        Serp_api_list = api_keys.serp_key_list
+        Serp_api = get_valid_api_key(Serp_api_list, for_which="Serp")
+
+        for ad_url in tqdm(url):
+
+            params = {
+            "q": f"{' '.join(keyword_list)} site:{ad_url}",
+            "google_domain": "google.com",
+            "api_key": Serp_api,
+            "num": 50,
+            "tbs": f"cdr:1,cd_min:{from_date.replace('-', '/')},cd_max:{to_date.replace('-', '/')}"
+            }
+
+            search = serpapi.search(params)
+            link_results = [dict(search)["organic_results"][i]["link"] for i in range(len(dict(search)["organic_results"]))]
+            website_urls3.append(link_results)
+
+        website_urls3 = link_results
+        print("\n".join(website_urls3[:10]))
+
+
+    website_urls = website_urls1 + website_urls2 + website_urls3
+
+    if len(website_urls) == 0:
+        response_complete = "There was nothing to display\n\nKeywords did'nt match any urls\nPlease add additional urls"
+       
+    else:
+        print("length of urls: ",len(website_urls))
 
         S = " Importing Database for Date "
         print("\n\n"+S.center(100, '=')+"\n")
@@ -166,7 +242,7 @@ def scrape():
             else:
                 print(f"Skipping {url} due to timeout of {timeout_seconds}s")
 
-        
+            
         url_date_dict = {i[0] : i[1] for i in url_date_list}
         
 
@@ -193,8 +269,8 @@ def scrape():
         S = " Filtering by date "
         print("\n\n"+S.center(100, '=')+"\n")
 
-        start_date = pd.to_datetime('14-09-2022',format='%d-%m-%Y')
-        end_date = pd.to_datetime('01-11-2024',format='%d-%m-%Y')
+        start_date = pd.to_datetime(from_date,format='%d-%m-%Y')
+        end_date = pd.to_datetime(to_date,format='%d-%m-%Y')
 
         df_filtered_by_date = urls_date_df[(urls_date_df["Date"] >= start_date) & (urls_date_df["Date"] <= end_date)]
         
@@ -228,18 +304,28 @@ def scrape():
 
             url_html_df_date_sorted = mongo_html_df[mongo_html_df['url'].isin(list(df_filtered_by_date["url"]))]
 
+
             page = 1
             amount_of_content = 20
             url_html_df_date_sorted_10 = url_html_df_date_sorted[(page - 1) * amount_of_content : amount_of_content * page]  # Only 10 at a time
 
             url_html_dict = url_html_df_date_sorted_10.set_index('url')['Html'].to_dict()
+            url_html_dict = {key : clean_and_extract(value) for key,value in url_html_dict.items()}  # Cleaning the Text
             try:
                 del url_html_extracted["_id"]
                 print("Deleted _id")
             except:
                 pass
 
-            url_extracted_html = kep(website_content = url_html_dict, keywords = keyword, filter_by_amount = 60)
+            url_extracted_html = kep(website_content = url_html_dict, keywords = " ", filter_by_amount = 30)
+            # url_extracted_html = url_html_dict
+
+            url_html_content_txt = ''
+            for key, val in url_extracted_html.items():
+                url_html_content_txt += key + '\n\n' + val + '\n\n' + '-'*50 + '\n\n'
+
+            with open(f"Output text/{datetime.now()}.txt", "w") as f:
+                f.write(url_html_content_txt)
 
             content_list = [(key,value[:2000]) for key, value in url_extracted_html.items()] # 2000 is temporary until tokenier function is not set up
 
@@ -253,6 +339,7 @@ def scrape():
             for i in range(iterations):
                 sub_content_list = content_list[MAX_CONTENT * i: MAX_CONTENT * (i + 1)]
                 content_list_complete.append(sub_content_list)
+
 
             # Handle remaining elements after the loop
             remaining_elements = content_list[MAX_CONTENT * iterations:]
@@ -287,10 +374,10 @@ def scrape():
 
         # print(response_complete)
 
-        
-        app_end_time = time()
-        
-        print(f"Completed in {app_end_time - app_start_time :.2f}s")
+    
+    app_end_time = time()
+    
+    print(f"Completed in {app_end_time - app_start_time :.2f}s")
 
 
 

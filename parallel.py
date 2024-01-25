@@ -1,7 +1,7 @@
 import openai
 
 def get_completion1(prompt, model="gpt-3.5-turbo"):
-    openai.api_key = ""  # Set the OpenAI API key
+    openai.api_key = ""
     messages = [{"role": "system", "content": prompt}]
     response = openai.ChatCompletion.create(
         model=model,
@@ -10,8 +10,20 @@ def get_completion1(prompt, model="gpt-3.5-turbo"):
     )
     return response.choices[0].message["content"]
 
+
+# def get_completion2(prompt, model="gpt-3.5-turbo"):
+#     openai.api_key = ""
+#     messages = [{"role": "system", "content": prompt}]
+#     response = openai.ChatCompletion.create(
+#         model=model,
+#         messages=messages,
+#         temperature=0,
+#     )
+#     return response.choices[0].message["content"]
+
+
 def get_completion2(prompt, model="gpt-3.5-turbo"):
-    openai.api_key = "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"  # Set the OpenAI API key
+    openai.api_key = ""
     messages = [{"role": "system", "content": prompt}]
     response = openai.ChatCompletion.create(
         model=model,
@@ -19,10 +31,11 @@ def get_completion2(prompt, model="gpt-3.5-turbo"):
         temperature=0,
     )
     return response.choices[0].message["content"]
+
+
 
 def gpt1(question, content_list_complete, data_idx, result_queue):
     try:
-        # Generate a completion using the first OpenAI model
         result1 = get_completion1(prompt=f""" 
             Data is in the form of tuples inside list: {content_list_complete[data_idx]} \n\n\n 
             Question: {question} \n\n\n
@@ -35,7 +48,6 @@ def gpt1(question, content_list_complete, data_idx, result_queue):
 
 def gpt2(question, content_list_complete, data_idx, result_queue):
     try:
-        # Generate a completion using the second OpenAI model
         result2 = get_completion2(prompt=f""" 
             Data is in the form of tuples inside list: {content_list_complete[data_idx + 1]} \n\n\n 
             Question: {question} \n\n\n
@@ -45,6 +57,6 @@ def gpt2(question, content_list_complete, data_idx, result_queue):
         result_queue.put(result2)
     except:
         pass
-
+        
 
 

@@ -29,7 +29,6 @@ const topNav = document.querySelector(".top-panel");
 const pushSection = document.querySelector(".push");
 const linkBox = document.querySelector(".about");
 
-const menu = document.querySelector(".menu");
 const logoProj = document.querySelector(".logo");
 const ans = document.querySelectorAll(".ans-1");
 
@@ -82,81 +81,13 @@ LightmodeButton.addEventListener("click", function () {
   modeChanger();
 });
 
-const messages = [
-  { message: "Hello!", timestamp: "2023-12-01T12:30:00" },
-  { message: "How are you?", timestamp: "2023-12-01T12:35:00" },
-  { message: "I am good, thanks!", timestamp: "2023-12-01T12:40:00" },
-  { message: "Great!", timestamp: "2023-12-01T12:45:00" },
-];
+const menu = document.querySelector(".menu");
 
-function showHistory() {
-  const datePicker = document.getElementById("datePicker");
-  const selectedDate = datePicker.value;
-
-  const filteredMessages = messages.filter((message) => {
-    const messageDate = new Date(message.timestamp).toISOString().split("T")[0];
-    return messageDate === selectedDate;
-  });
-
-  displayMessages(filteredMessages);
-}
-
-function displayMessages(messagesToShow) {
-  const chatHistory = document.getElementById("chatHistory");
-  chatHistory.innerHTML = ""; // Clear chat history
-
-  messagesToShow.forEach((message) => {
-    const messageElement = document.createElement("div");
-    const formattedDate = new Date(message.timestamp).toLocaleTimeString();
-    messageElement.classList.add("message");
-    messageElement.innerHTML = `<strong>${formattedDate}:</strong> ${message.message}`;
-    chatHistory.appendChild(messageElement);
-  });
-}
-
-function sendMessage() {
-  const userInput = document.getElementById("userInput");
-  const message = userInput.value.trim();
-  const timestamp = new Date().toISOString();
-
-  if (message !== "") {
-    messages.push({ message, timestamp });
-    userInput.value = "";
-    showHistory(); // Refresh chat history after sending a new message
-  }
-}
-
-// Display messages for the default date (today)
-showHistory();
-
-menu.addEventListener("click", function () {
+menu.addEventListener("click", function (e) {
+  e.preventDefault();
+  console.log("menu clicked");
   document.querySelector(".push").classList.toggle("sidebarshow");
 });
-
-// handling the backend....
-
-// function showLoadingScreen() {
-//   document.querySelector(".loading-screen").style.display = "block";
-//   promptSection.style.display = "none";
-// }
-
-// function hideLoadingScreen() {
-//   document.querySelector(".loading-screen").style.display = "none";
-//   promptSection.style.display = "block";
-// }
-
-// function redirectToResultPage() {
-//   // Redirect to result.html
-//   const checkurl = document.getElementById("urls");
-
-//   if (checkurl.value == "") {
-//     return;
-//   } else {
-//     window.location.href = "/result";
-//     sendData();
-//   }
-// }
-// script.js
 
 function showLoading() {
   document.querySelector(".loading-screen").style.display = "flex";
@@ -185,15 +116,27 @@ function sendData() {
   const keyword = keywordInput.value;
   const prompt = promptInput.value;
 
+  const from_date = document.getElementById("datePicker").value;
+  const to_date = document.getElementById("userInput").value;
+
+  const postData = {
+    urls: urls,
+    keyword: keyword,
+    prompt: prompt,
+    from_date: from_date,
+    to_date: to_date,
+  };
+
   // Send data to the backend
   console.log(prompt);
   console.log(keyword);
+
   fetch("/scrape", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ urls, keyword, prompt }),
+    body: JSON.stringify(postData),
   })
     .then((response) => {
       if (!response.ok) {

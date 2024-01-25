@@ -98,13 +98,14 @@ class WebScraper2:
                     if response.status_code == 200:
                         soup = BeautifulSoup(response.content, 'html.parser')
                         all_links = soup.find_all('a', href=True)
-                        excluded_domains = r'(magicbricks|play\.google|facebook\.com|twitter\.com|instagram\.com|linkedin\.com|youtube\.com|\.gov|\.org|policy|terms|buy|horoscope|web\.whatsapp\.com)'
+                        excluded_domains = r'(magicbricks|play\.google|facebook\.com|twitter\.com|instagram\.com|linkedin\.com|youtube\.com|\.gov|\.org|policy|terms|buy|horoscope|web\.whatsapp\.com|whatsapp|share=facebook|share=twitter|share=telegram|share=whatsapp})'
                         # excluded_domains will not take urls into account with these domains
                         for link in all_links:
                             href = link['href']
                             if re.match(r'https?://', href) and not re.search(excluded_domains, href):
                                 # print(href)
                                 temp_inside_urls.append(href)
+                                # print(temp_inside_urls)
                     else:
                         self.failed_fetch += 1
                 except Exception as e:
@@ -138,8 +139,7 @@ print("Tree size:", total_size)
 urls_list = ["https://www.khaleejtimes.com"]
 urls_list_str = ",".join(urls_list)
 
-scraper = WebScraper2(sub_url_size=4 , keywords="gaza,israel,war,hamas") # KEEP IT 1, 2 or more will result in 10000's of urls.
-                        # Integration with DB will make it faster in future, as fetching is much faster than scrapping.
+scraper = WebScraper2(sub_url_size=4 , keywords="gaza,israel,war,hamas")
 inside_urls, failed_fetch, sub_url_size, total_size = scraper.get_suburls2(urls_list_str)
 
 # print("Inside URLs:", inside_urls)

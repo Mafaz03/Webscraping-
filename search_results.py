@@ -1,5 +1,6 @@
 import re
 import requests
+from tqdm import tqdm
 
 def check_url_existence(url):
     """
@@ -50,27 +51,36 @@ def generate_urls_with_exclusions(base_urls, search_extras, keywords, excluded_d
     available_urls = set()
     
 
-    for url in base_urls:
-        for extra in search_extras:
+    for url in tqdm(base_urls):
+        for extra in tqdm(search_extras):
             for keyword in keywords:
                 possible_link = url + extra + keyword
 
                 if check_url_existence(possible_link) and not excluded_domains_pattern.search(possible_link):
+                    # if get_html([url]) != get_html([possible_link]):
                     available_urls.add(possible_link)
+                    break  # Move to the next base_url
+
                 else:
                     redirected_link = get_final_url(possible_link)
                     if redirected_link is not None and not excluded_domains_pattern.search(redirected_link):
+                        # if get_html([url]) != get_html([possible_link]):
                         available_urls.add(redirected_link)
+                        
 
     return available_urls
 
+
+def check_failure(text, failed_txt):
+    return any(failure_str.lower() in text.lower() for failure_str in failed_txt)
+
 """
 # Example usage:
-base_urls = ["https://www.postcourier.com.pg", "https://www.africanews.com", "https://www.khaleejtimes.com", "http://bbc.com"]
-search_extras = ["?s=", "/search/", "/search?q=", "/topic/"]
-keywords = ["png", "road"]
-excluded_domains = r'(magicbricks|play\.google|facebook\.com|twitter\.com|instagram\.com|linkedin\.com|youtube\.com|\.gov|\.org|policy|terms|buy|horoscope|web\.whatsapp\.com|\.(png|jpg|jpeg|gif|bmp|tiff|webp))'
+result_text = "The operation failed with an error. Please try again."
+failed_txt = ["Sorry", "not found", "oops", "try again", "failed", "error"]
 
-result_urls = generate_urls_with_exclusions(base_urls, search_extras, keywords, excluded_domains)
-print(result_urls)
+if check_failure(result_text, failed_txt):
+    print("Failure detected!")
+else:
+    print("No failure.")
 """
