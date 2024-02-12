@@ -104,6 +104,10 @@ function sendData() {
   const promptInput = document.getElementById("prompt");
   console.log("urlsInput.value:", urlsInput.value); // Debug statement
 
+  // var selectedOption = document.querySelector(
+  //   'input[name="tripple"]:checked'
+  // ).value;
+
   const keywordInput = document.getElementById("keyword");
   if (urlsInput.value == "") {
     return;
@@ -119,12 +123,29 @@ function sendData() {
   const from_date = document.getElementById("datePicker").value;
   const to_date = document.getElementById("userInput").value;
 
+  const selectedOptions = [];
+
+  document
+    .querySelectorAll('.form-group input[type="checkbox"]')
+    .forEach((checkbox) => {
+      if (checkbox.checked) {
+        selectedOptions.push(checkbox.name);
+      }
+    });
+
+  // const formData = {
+  //   html: document.getElementById("html").checked,
+  //   css: document.getElementById("css").checked,
+  //   javascript: document.getElementById("javascript").checked,
+  // };
+
   const postData = {
     urls: urls,
     keyword: keyword,
     prompt: prompt,
     from_date: from_date,
     to_date: to_date,
+    selectedOption: selectedOptions,
   };
 
   // Send data to the backend
@@ -159,4 +180,9 @@ function sendData() {
       // hideLoadingScreen();
       console.error("Error:", error);
     });
+}
+
+function openBot() {
+  var openBotUrl = "/chatbot";
+  window.open(openBotUrl, "_blank");
 }

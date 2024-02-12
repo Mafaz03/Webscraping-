@@ -3,20 +3,16 @@
 import openai
 from openai import OpenAI
 import api_keys
+from preprocess import get_valid_api_key
 
-api_key = api_keys.open_ai_key_list[1]                                      # Enter key here
+openai_api_list = api_keys.open_ai_key_list
+api_key = get_valid_api_key(openai_api_list, for_which="OpenAI")
+print("Openai api established")
+
 client = OpenAI(api_key = api_key)
 
 openai.api_key = api_key
 
-#def get_completion(prompt, model="gpt-3.5-turbo"):
-#    messages = [{"role": "system", "content": prompt}]
-#    response = openai.ChatCompletion.create(
-#        model=model,
-#        messages=messages,
-#        temperature=0,
-#    )
-#    return response.choices[0].message["content"]
 
 def get_completion2(prompt, model = "gpt-3.5-turbo-1106"):
     completion = client.chat.completions.create(

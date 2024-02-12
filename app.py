@@ -5,7 +5,7 @@
 from time import time
 app_start_time = time()
 
-from flask import Flask, render_template, request, jsonify,redirect, url_for,escape
+from flask import Flask, render_template, request, jsonify,redirect, url_for,escape,session
 import html
 from urllib.parse import quote
 import requests
@@ -16,18 +16,16 @@ import re
 from bs4 import BeautifulSoup
 import ssl
 from tqdm import tqdm
-from textblob import TextBlob
 import openai
-import multiprocessing
 import pandas as pd
 import numpy as np 
 from time import sleep
+
 
 from html_extractor import *
 from get_suburls import *
 from openai_func import *
 from get_date import *
-# from parallel import *
 from mongo_utils import import_from_mongo, save_to_mongo
 from url_stats import plot_date
 from search_results import *
@@ -35,23 +33,116 @@ from preprocess import *
 import api_keys
 import matplotlib
 matplotlib.use('agg')
+from flask import Markup
+
+import openai_func
+import os
 
 import serpapi
+import cohere
 
 from keyword_extraction import keyword_extractor_paragraph as kep
 
+from PyPDF2 import PdfReader
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.text_splitter import CharacterTextSplitter
+from langchain_community.vectorstores import FAISS
+from langchain.chains.question_answering import load_qa_chain
+from langchain_community.llms import OpenAI
 
 from pymongo import MongoClient
 import certifi
 ca = certifi.where()
 
 
-
 app = Flask(__name__)
+
+app.secret_key = 'petraoilscraperproject'
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+
+@app.route('/chatbot')
+def chat_bot():
+    return render_template('home.html')
+
+
+
+@app.route("/get")
+def get_bot_response():
+    global conversation_context
+
+    query = request.args.get('msg')
+
+    # If it's a follow-up question, use the previous documents
+    if conversation_context["last_question"] and conversation_context["docs"]:
+        docs = conversation_context["docs"]
+    else:
+        # Otherwise, perform a new search
+        docs = document_search.similarity_search(query)
+
+    ans = chain.run(input_documents=docs, question=query)
+
+    # Update conversation context
+    conversation_context["docs"] = docs
+    conversation_context["last_question"] = query
+
+    return ans
+
+os.environ["OPENAI_API_KEY"] = openai_func.api_key
+
+@app.route('/process_files',methods=['POST'])
+def process_files():
+       global document_search
+       global chain
+       global conversation_context
+
+       try:           
+
+        S = " Entering and verifying files "
+        print("\n\n"+S.center(100, '=')+"\n")
+
+        print("Processing files...")
+          # Get the file names from the FormData object
+        file_contents = [file.filename for file in request.files.getlist('files')]
+
+        # Do something with file_names
+        print('File Names:', file_contents)
+        # file_contents_list = []
+        # file_contents= request.json.get('fileContents',[])
+        for i in file_contents:
+            print(i)
+
+        S = " Generating Embeddings "
+        print("\n\n"+S.center(100, '=')+"\n")
+
+        raw_text = get_raw_text("Output text", file_contents)
+
+        # Split text using Character Text Split
+        text_splitter = CharacterTextSplitter(
+            separator="\n", chunk_size=1000, chunk_overlap=600, length_function=len
+        )
+        texts = text_splitter.split_text(raw_text)
+
+        # Download embeddings from OpenAI
+        embeddings = OpenAIEmbeddings()
+
+        # Create FAISS vector store from texts
+        document_search = FAISS.from_texts(texts, embeddings)
+
+        # Load question-answering chain
+        chain = load_qa_chain(OpenAI(), chain_type="stuff")
+
+        # Initialize conversation context
+        conversation_context = {"docs": None, "last_question": None}
+
+        return jsonify({'message': 'File data received and processed successfully'})
+       except Exception as e:
+            print(f"Error: {e}")
+            
+            return jsonify({'error': str(e)}), 500
 
 @app.route('/scrape', methods=['POST'])
 def scrape():
@@ -79,6 +170,9 @@ def scrape():
     from_date = datetime.strptime(from_date_str, '%Y-%m-%d').strftime('%d-%m-%Y')
     to_date = datetime.strptime(to_date_str, '%Y-%m-%d').strftime('%d-%m-%Y')
 
+    selectedOptions = data.get('selectedOption', [])
+
+    print("The option choosen is",selectedOptions) 
     print("From",from_date)
     print("to",to_date)
 
@@ -87,9 +181,22 @@ def scrape():
     print(f"Senching for keyword: {keyword}")
     print(f"prompt is: {prompt}")
 
-    SEARCH_BAR_SCRAPE = 1
-    GENERAL_DEEP_SCRAPE = 1 
-    ADVANCED_SEARCH = 1
+    SORT_BY_RELAVANCY = 1
+
+    SEARCH_BAR_SCRAPE = 0
+    GENERAL_DEEP_SCRAPE = 0
+    ADVANCED_SEARCH = 0
+
+    if len(selectedOptions) != 0:
+        for choice in selectedOptions:
+            if choice == "search-bar":
+                SEARCH_BAR_SCRAPE = 1
+            if choice == "general-deep":
+                GENERAL_DEEP_SCRAPE = 1
+            if choice == "advance":
+                ADVANCED_SEARCH = 1
+    else:
+        ADVANCED_SEARCH = 1
 
     inside_urls1 = []
     inside_urls2 = []
@@ -99,13 +206,14 @@ def scrape():
     website_urls2 = []
     website_urls3 = []
 
+    keywords_list = keyword.split(',')
+    
     if SEARCH_BAR_SCRAPE == 1:
         S = " Search Bar Scrape "
         print("\n\n"+S.center(100, '=')+"\n")
         base_urls = url
 
         search_extras = ["?s=", "/search/", "/search?q=", "/topic/"]
-        keywords_list = keyword.split(',')
         excluded_domains = r'(magicbricks|443|play\.google|facebook\.com|twitter\.com|instagram\.com|linkedin\.com|youtube\.com|\.gov|\.org|policy|terms|buy|horoscope|web\.whatsapp\.com|\.(png|jpg|jpeg|gif|bmp|tiff|webp))'
         result_urls = generate_urls_with_exclusions(base_urls, search_extras, keywords_list, excluded_domains)
         print('\n'.join(result_urls))
@@ -163,19 +271,22 @@ def scrape():
         Serp_api_list = api_keys.serp_key_list
         Serp_api = get_valid_api_key(Serp_api_list, for_which="Serp")
 
-        for ad_url in tqdm(url):
+        # for ad_url in tqdm(url):
 
-            params = {
-            "q": f"{' '.join(keyword_list)} site:{ad_url}",
-            "google_domain": "google.com",
-            "api_key": Serp_api,
-            "num": 50,
-            "tbs": f"cdr:1,cd_min:{from_date.replace('-', '/')},cd_max:{to_date.replace('-', '/')}"
-            }
+        site_url = ["site:" + i for i in url]
+        site_or_url = " OR ".join(site_url)
 
-            search = serpapi.search(params)
-            link_results = [dict(search)["organic_results"][i]["link"] for i in range(len(dict(search)["organic_results"]))]
-            website_urls3.append(link_results)
+        params = {
+        "q": f"{' '.join(keyword_list)} {site_or_url}",
+        "google_domain": "google.com",
+        "api_key": Serp_api,
+        "num": 100,
+        "tbs": f"cdr:1,cd_min:{from_date.replace('-', '/')},cd_max:{to_date.replace('-', '/')}"
+        }
+
+        search = serpapi.search(params)
+        link_results = [dict(search)["organic_results"][i]["link"] for i in range(len(dict(search)["organic_results"]))]
+        # website_urls3.append(link_results)
 
         website_urls3 = link_results
         print("\n".join(website_urls3[:10]))
@@ -304,13 +415,23 @@ def scrape():
 
             url_html_df_date_sorted = mongo_html_df[mongo_html_df['url'].isin(list(df_filtered_by_date["url"]))]
 
+            if SORT_BY_RELAVANCY == 1:
+                url_html_df_date_sorted = rerank_df(df = url_html_df_date_sorted, col_to_rank="Html", col_to_address="url", query= " ".join(keywords_list) , pprint=True, api_key=api_keys.cohere_key_list[0]) #.iloc[:,:2]
+            url_html_df_date_sorted.to_csv("url_Html2.csv", index = False)
+
+            sources_str = "\n\n".join(list(url_html_df_date_sorted.url)[:20])
 
             page = 1
             amount_of_content = 20
-            url_html_df_date_sorted_10 = url_html_df_date_sorted[(page - 1) * amount_of_content : amount_of_content * page]  # Only 10 at a time
+            url_html_df_date_sorted_20 = url_html_df_date_sorted[(page - 1) * amount_of_content : amount_of_content * page]  # Only 10 at a time
+            print(f"Relavancy Score of page number: {page} is: {url_html_df_date_sorted_20.Relevance_Score.median():.3f}")
 
-            url_html_dict = url_html_df_date_sorted_10.set_index('url')['Html'].to_dict()
+            url_html_dict = url_html_df_date_sorted_20.set_index('url')['Html'].to_dict()
             url_html_dict = {key : clean_and_extract(value) for key,value in url_html_dict.items()}  # Cleaning the Text
+            
+            # url_html_df = pd.DataFrame(list(url_html_dict.items()), columns=['url', 'Html'])
+            # url_html_df.to_csv("url_Html.csv", index = False)
+
             try:
                 del url_html_extracted["_id"]
                 print("Deleted _id")
@@ -382,21 +503,31 @@ def scrape():
 
 
 
+
     # Dummy response for demonstration purposes
     response_data = {"url" : url}
     # trying to solve the bug....
-    response_complete = response_complete.strip()
     # return jsonify({'result':response_complete})
     # url_encoded_response = quote(response_complete)
     # return redirect('/result?response_complete=' + response_complete)
     
     # return redirect('/result?response_complete=' + response_complete.replace('\n', ''))
 
+    response_complete = response_complete.strip()
+    # response_complete = "Test"
 
     # print("Original response_complete:", response_complete)
-    response_complete = response_complete.replace('\n', '<br>')
+    response_complete_clickable = make_links_clickable(response_complete)
+    response_complete_clickable = response_complete_clickable.replace('\n', '<br>')
+    sources = make_links_clickable(sources_str).replace('\n', '<br>')
+
+    session['result_content'] = Markup(response_complete_clickable)
+    session['sources_content']=Markup(sources);
+    return redirect('/result')
+    # print("session content:", session)
+    # encoded_content = quote(response_complete)----this should be added
     # print("Transformed response_complete:", response_complete)
-    return redirect('/result?response_complete=' + response_complete)
+    # return redirect('/result?response_complete=' + Markup(encoded_content))
 
    
     # return redirect('/result?response_complete=' + response_complete.replace('\n', '<br>'))
@@ -408,10 +539,10 @@ def scrape():
 
 @app.route('/result')
 def result():
-      response_complete = request.args.get('response_complete', '')
-      
-    #   print("The data this is what it got:",response_complete);
-      return render_template('result.html', result_data=response_complete)
+      result_data = session.get('result_content', None);
+      sources_data=session.get('sources_content',None);
+    #   print("result_data before rendering template:", result_data)
+      return render_template('result2.html', result_data=result_data,sources_data=sources_data)
 
 
 

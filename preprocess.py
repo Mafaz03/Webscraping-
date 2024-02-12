@@ -1,15 +1,40 @@
 import serpapi
 from bs4 import BeautifulSoup
+import pandas as pd
+import cohere
+from openai import OpenAI
+import re
+
+from flask import Flask, render_template, request
+
+from PyPDF2 import PdfReader
+import os
+
+
+def make_links_clickable(text):
+    # Regular expression to find URLs in the text
+    url_pattern = re.compile(r'https?://\S+')
+    
+    def replace_link(match):
+        url = match.group(0)
+        return f'<a href="{url}" target="_blank" style="color: white; text-decoration: none; border-bottom: 1px solid white;">{url}</a>'
+    
+    # Replace URLs with HTML anchor tags
+    return url_pattern.sub(replace_link, text)
+
+
 
 def split_and_duplicate_keys(dictionary, max_chunk_size):
     """
     Splits the values of a given dictionary into chunks of a specified size and duplicates the keys.
     
     Parameters:
+    -----------
     - dictionary (dict): The input dictionary where keys are strings and values are strings to be split.
     - max_chunk_size (int): The maximum size for each chunk of the string values.
 
     Returns:
+    -----------
     dict: A new dictionary with duplicated keys and split values. The original values in the input
           dictionary remain unchanged. The keys for the split values include the original key for
           the first chunk, and additional keys with a suffix ' part_' and the chunk index for the
@@ -34,9 +59,11 @@ def keep_first_occurrence(input_dict):
     Filter a dictionary to keep only the first occurrence of each unique value.
 
     Parameters:
+    -----------
     - input_dict (dict): The input dictionary.
 
     Returns:
+    -----------
     - dict: A new dictionary containing only the first occurrence of each unique value.
     """
     seen_values = set()
@@ -59,11 +86,13 @@ def is_valid_api_key(api_key: str, for_which: str):
     Check if the provided API key is valid for the specified service.
 
     Parameters:
+    -----------
         api_key (str): The API key to validate.
         for_which (str): The service for which the API key is being validated. 
             Should be either "Serp" or "OpenAI".
 
     Returns:
+    -----------
         bool: True if the API key is valid, False otherwise.
     """
     if for_which == "Serp":
@@ -76,14 +105,33 @@ def is_valid_api_key(api_key: str, for_which: str):
         try:
             # Attempt to make a minimal search request
             response = serpapi.search(params)
+            print("oolala")
+            print(response)
             # If successful, return True
+            print(api_key)
             return True
         except serpapi.exceptions.SerpApiError as e:
+            print("noo")
+            print(api_key)
             # If the error status indicates an invalid API key, return False
             return False
         
     if for_which == "OpenAI":
-        pass
+        client = OpenAI(api_key = api_key)
+        try:
+            # Attempt to make a request to OpenAI's API
+            completion = client.chat.completions.create(
+            model="gpt-3.5-turbo-1106",
+            messages=[
+                {"role": "system", "content": "You are news assitant"},
+                {"role": "user", "content": "Hello"}
+                ]
+            )
+            # If successful, return True
+            return True
+        except:
+            # If the error status indicates an invalid API key, return False
+            return False
 
 
 def get_valid_api_key(api_keys: list, for_which: str):
@@ -91,24 +139,32 @@ def get_valid_api_key(api_keys: list, for_which: str):
     Iterate over a list of API keys and return the first valid one found for the specified service.
 
     Parameters:
+    -----------
         api_keys (list of str): List of API keys to validate.
         for_which (str): The service for which the API key is being validated. 
             Should be either "Serp" or "OpenAI".
 
     Returns:
+    -----------
         str or None: The first valid API key found, or None if no valid key is found.
     """
     if for_which == "Serp":
         for api_key in api_keys:
             # Check if the API key is valid
-            if is_valid_api_key(api_key, for_which="Serp"):
+            if is_valid_api_key(api_key, for_which="Serp") == True:
                 # If valid, return the current key
                 return api_key
         # If no valid key is found, return None
         return None
     
     if for_which == "OpenAI":
-        pass
+        for api_key in api_keys:
+            # Check if the API key is valid
+            if is_valid_api_key(api_key, for_which="OpenAI"):
+                # If valid, return the current key
+                return api_key
+        # If no valid key is found, return None
+        return None
 
 def clean_and_extract(text):
     soup = BeautifulSoup(text, 'html.parser')
@@ -121,3 +177,77 @@ def clean_and_extract(text):
     main_content = soup.get_text(separator='\n', strip=True)
 
     return main_content
+
+
+
+def rerank_df(df: pd.DataFrame, col_to_rank: str, col_to_address: str, query: str, api_key: str ,model: str = "rerank-english-v2.0", pprint: bool = True):
+    """
+    Reranks a DataFrame based on a query using a specified model.
+
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame containing documents to be reranked.
+    col_to_rank : str
+        Column name in DataFrame containing the text/documents to be ranked.
+    col_to_address : str
+        Column name in DataFrame containing the address of documents (for display).
+    query : str
+        Query string for reranking documents.
+    model : str, optional
+        Name of the reranking model to use, defaults to "rerank-english-v2.0".
+    pprint : bool, optional
+        If True, prints the document rank, index, document content, and relevance score, defaults to True.
+
+    Returns:
+    --------
+    pd.DataFrame
+        Reranked DataFrame with an additional "Relevance_Score" column, sorted by relevance score in descending order.
+    """
+    co = cohere.Client(api_key)
+    Relevance_Score = []  # List to store relevance scores
+    results = co.rerank(query=query, documents=list(df[col_to_rank]), model=model)  # Rerank documents
+    for idx, r in enumerate(results):
+        if pprint:  # If pprint is True, print document details
+            print(f"Document Rank: {idx + 1}, Document Index: {r.index}")
+            print(f"Document: {list(df[col_to_address])[r.index]}")
+            print(f"Relevance Score: {r.relevance_score:.2f}")
+        Relevance_Score.append(r.relevance_score)  # Append relevance score
+
+    df["Relevance_Score"] = Relevance_Score  # Add relevance scores to DataFrame
+    return df.sort_values(by="Relevance_Score", ascending=False)  # Sort DataFrame by relevance score
+
+
+def get_raw_text(file_dir, file_paths):
+    """
+    Extracts raw text from PDF and text files.
+
+    Args:
+        file_paths (list): List of file paths to extract text from.
+
+    Returns:
+        str: Concatenated raw text extracted from all specified files.
+    """
+    raw_text = ""
+    for file_path in file_paths:
+        if os.path.exists(file_dir + "/" + file_path) :  # Check if the file path exists
+            if file_path.endswith(".pdf"):
+                try:
+                    pdf_reader = PdfReader(file_dir + '/' + file_path)
+                    for i, page in enumerate(pdf_reader.pages):
+                        content = page.extract_text()
+                        if content:
+                            raw_text += content
+                except Exception as e:
+                    print(f"Error reading PDF file '{file_dir + '/' + file_path}': {e}")
+            elif file_path.endswith(".txt"):
+                try:
+                    with open(file_dir + '/' + file_path, "r") as f:
+                        raw_text += f.read()
+                except Exception as e:
+                    print(f"Error reading text file '{file_dir + '/' + file_path}': {e}")
+            else:
+                print(f"Unsupported file type: '{file_path}'")
+        else:
+            print(f"File not found: '{file_dir + '/' + file_path}'")
+    return raw_text

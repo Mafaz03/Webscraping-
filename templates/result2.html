@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Result</title>
+    <link rel="stylesheet" href="/static/result.css">
+    
+</head>
+<body class="dark-mode-bg-ans">
+    
+    <nav id='menu'>
+        <input type='checkbox' id='responsive-menu' onclick='updatemenu()'><label></label>
+        <ul>
+            <li><a href='index.html'>Home</a></li>
+            <li><a href='#'>Sources</a></li>
+            <li><a href='#'>Archive</a></li>
+        </ul>
+        <img src="/static/logo.png">
+    </nav>
+    
+    <div class="container">
+        <div class="ans-1">
+            
+            <p>{{result_data|safe}}</p>
+        </div>
+        <div class="sources">
+            <h2 style="margin-bottom: 2rem;">Sources</h2>
+            <p>{{sources_data|safe}}</p>
+        </div>
+    </div>
+    
+    
+    <script src="/static/result.js"></script>
+</body>
+</html>
+
+
+
+
+ 
