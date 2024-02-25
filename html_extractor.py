@@ -17,7 +17,7 @@ def check_failure(text, failed_txt):
     return any(failure_str.lower() in text.lower() for failure_str in failed_txt)
 
 
-def get_html(urls: list[str], mode_of_search: str = None) -> (dict[str, str], int):
+def get_html(urls, mode_of_search = None) :
     """
     Function that takes in URLs and returns the HTML content within them.
 

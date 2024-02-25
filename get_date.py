@@ -2,7 +2,7 @@ import requests
 from htmldate import find_date
 from datetime import datetime
 
-def fetch_date_from_url(url: str):
+def fetch_date_from_url(url):
     """
     This function fetches the date from a webpage.
 

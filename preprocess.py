@@ -81,7 +81,7 @@ def keep_first_occurrence(input_dict):
 def prepend_dict(original_dict, new_dict): return {**new_dict, **original_dict}
 
 
-def is_valid_api_key(api_key: str, for_which: str):
+def is_valid_api_key(api_key, for_which):
     """
     Check if the provided API key is valid for the specified service.
 
@@ -105,10 +105,6 @@ def is_valid_api_key(api_key: str, for_which: str):
         try:
             # Attempt to make a minimal search request
             response = serpapi.search(params)
-            print("oolala")
-            print(response)
-            # If successful, return True
-            print(api_key)
             return True
         except serpapi.exceptions.SerpApiError as e:
             print("noo")
@@ -134,7 +130,7 @@ def is_valid_api_key(api_key: str, for_which: str):
             return False
 
 
-def get_valid_api_key(api_keys: list, for_which: str):
+def get_valid_api_key(api_keys, for_which):
     """
     Iterate over a list of API keys and return the first valid one found for the specified service.
 
@@ -180,7 +176,7 @@ def clean_and_extract(text):
 
 
 
-def rerank_df(df: pd.DataFrame, col_to_rank: str, col_to_address: str, query: str, api_key: str ,model: str = "rerank-english-v2.0", pprint: bool = True):
+def rerank_df(df: pd.DataFrame, col_to_rank, col_to_address, query, api_key ,model = "rerank-english-v2.0", pprint = True):
     """
     Reranks a DataFrame based on a query using a specified model.
 

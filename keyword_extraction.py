@@ -1,6 +1,6 @@
 from tqdm import tqdm
 
-def keyword_extractor_paragraph(website_content: dict[str, str], keywords: list, filter_by_amount: int = None):
+def keyword_extractor_paragraph(website_content, keywords, filter_by_amount = None):
     """
     Extracts only those paragraphs that have a keyword in it and length above 60.
 

@@ -5,7 +5,7 @@ import numpy as np
 
 ca = certifi.where()
 
-def import_from_mongo(date_db_name:str, collection_db_name:str, columns: list) -> pd.DataFrame():
+def import_from_mongo(date_db_name, collection_db_name, columns):
     """
     Imports data from a MongoDB collection specified by the date database name and collection name.
 
@@ -44,7 +44,7 @@ print(import_from_mongo(date_db_name, collection_db_name, columns))
 """
 
 
-def save_to_mongo(date_db_name:str, collection_db_name:str, data):
+def save_to_mongo(date_db_name, collection_db_name, data):
     """
     Saves data to a MongoDB collection specified by the date database name and collection name.
 

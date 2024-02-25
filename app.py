@@ -30,6 +30,7 @@ from mongo_utils import import_from_mongo, save_to_mongo
 from url_stats import plot_date
 from search_results import *
 from preprocess import *
+from plotting_func import *
 import api_keys
 import matplotlib
 matplotlib.use('agg')
@@ -370,7 +371,8 @@ def scrape():
         save_to_mongo(date_db_name, collection_db_name, data = data)
 
         urls_date_df = pd.merge(urls_from_extraction, mongo_date_df, on='url', how='inner').sort_values(by="Date",ascending=False)
-        
+        # urls_date_df.to_csv('url_date.csv')
+
         # Columns
         print(urls_date_df.columns)
         plot_date(urls_date_df, save_path=f"Plots/{datetime.now()}.jpg")
@@ -424,6 +426,9 @@ def scrape():
             page = 1
             amount_of_content = 20
             url_html_df_date_sorted_20 = url_html_df_date_sorted[(page - 1) * amount_of_content : amount_of_content * page]  # Only 10 at a time
+
+            dashboard(urls_date_df, url_html_df_date_sorted_20, from_date, to_date, amount_of_content)
+
             print(f"Relavancy Score of page number: {page} is: {url_html_df_date_sorted_20.Relevance_Score.median():.3f}")
 
             url_html_dict = url_html_df_date_sorted_20.set_index('url')['Html'].to_dict()
