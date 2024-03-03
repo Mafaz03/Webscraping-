@@ -5,7 +5,7 @@
 from time import time
 app_start_time = time()
 
-from flask import Flask, render_template, request, jsonify,redirect, url_for,escape,session
+from flask import Flask, render_template, request, jsonify,redirect, url_for,escape,session,send_from_directory
 import html
 from urllib.parse import quote
 import requests
@@ -21,6 +21,7 @@ import pandas as pd
 import numpy as np 
 from time import sleep
 
+from serpapi import GoogleSearch
 
 from html_extractor import *
 from get_suburls import *
@@ -277,17 +278,38 @@ def scrape():
         site_url = ["site:" + i for i in url]
         site_or_url = " OR ".join(site_url)
 
+
         params = {
         "q": f"{' '.join(keyword_list)} {site_or_url}",
-        "google_domain": "google.com",
+        "tbm": "nws",
         "api_key": Serp_api,
-        "num": 100,
-        "tbs": f"cdr:1,cd_min:{from_date.replace('-', '/')},cd_max:{to_date.replace('-', '/')}"
+        "tbs": f"cdr:1,cd_min:{from_date.replace('-', '/')},cd_max:{to_date.replace('-', '/')}",
+        'num' : 100
         }
 
-        search = serpapi.search(params)
-        link_results = [dict(search)["organic_results"][i]["link"] for i in range(len(dict(search)["organic_results"]))]
-        # website_urls3.append(link_results)
+        search = GoogleSearch(params)
+        search_dict = search.get_dict()
+
+        #"-".join(from_date.split("-")[:2] + [str((int(from_date.split("-")[2]) + 2))])
+        #search.get_dict()['search_information']['news_results_state'] == 'Fully empty'
+        try_times = 0
+        from_date_modified = from_date
+        while search_dict['search_information']['news_results_state'] == 'Fully empty':
+            from_date_modified = "-".join(from_date_modified.split("-")[:2] + [str((int(from_date_modified.split("-")[2]) - 2))])
+            params['tbs'] = f"cdr:1,cd_min:{from_date_modified},cd_max:{to_date.replace('-', '/')}",
+            params['num'] = 70,
+            search = GoogleSearch(params)
+            search_dict = search.get_dict()
+            if try_times == 4 :
+                break
+
+            print(f"From date was modified due to less results: {from_date_modified}")
+            try_times += 1
+
+        # import pdb;pdb.set_trace()
+        if search_dict['search_information']['news_results_state'] != 'Fully empty':
+            link_results = [search_dict['news_results'][i]['link'] for i in range(len(search_dict['news_results']))]
+        else: link_results = []
 
         website_urls3 = link_results
         print("\n".join(website_urls3[:10]))
@@ -382,7 +404,7 @@ def scrape():
         S = " Filtering by date "
         print("\n\n"+S.center(100, '=')+"\n")
 
-        start_date = pd.to_datetime(from_date,format='%d-%m-%Y')
+        start_date = pd.to_datetime(from_date_modified,format='%d-%m-%Y')
         end_date = pd.to_datetime(to_date,format='%d-%m-%Y')
 
         df_filtered_by_date = urls_date_df[(urls_date_df["Date"] >= start_date) & (urls_date_df["Date"] <= end_date)]
@@ -418,7 +440,11 @@ def scrape():
             url_html_df_date_sorted = mongo_html_df[mongo_html_df['url'].isin(list(df_filtered_by_date["url"]))]
 
             if SORT_BY_RELAVANCY == 1:
-                url_html_df_date_sorted = rerank_df(df = url_html_df_date_sorted, col_to_rank="Html", col_to_address="url", query= " ".join(keywords_list) , pprint=True, api_key=api_keys.cohere_key_list[0]) #.iloc[:,:2]
+                if len(url_html_df_date_sorted) == 0:
+                    response_complete = "There was an issue with indexing dates \n\n or, links and keywords were provided incorrectly"
+
+                else:
+                    url_html_df_date_sorted = rerank_df(df = url_html_df_date_sorted, col_to_rank="Html", col_to_address="url", query= " ".join(keywords_list) , pprint=True, api_key=api_keys.cohere_key_list[0]) #.iloc[:,:2]
             url_html_df_date_sorted.to_csv("url_Html2.csv", index = False)
 
             sources_str = "\n\n".join(list(url_html_df_date_sorted.url)[:20])
@@ -551,6 +577,12 @@ def result():
 
 
 
+@app.route('/display_image')
+def display_image():
+    image_path = os.path.join(app.root_path, 'dashboard', 'dashboard_plot.png')
+    print(f"Absolute Path: {image_path}")
+    return send_from_directory('dashboard', 'dashboard_plot.png')
+
 
 
 
@@ -566,4 +598,4 @@ def result():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host = '0.0.0.0' ,port = 8000)
+    app.run(debug=True)

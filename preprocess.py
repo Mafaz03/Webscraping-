@@ -7,6 +7,8 @@ import re
 
 from flask import Flask, render_template, request
 
+from serpapi import GoogleSearch
+
 from PyPDF2 import PdfReader
 import os
 
@@ -104,12 +106,11 @@ def is_valid_api_key(api_key, for_which):
         }
         try:
             # Attempt to make a minimal search request
-            response = serpapi.search(params)
+            response = GoogleSearch(params)
+            print("Serp Key passed")
             return True
-        except serpapi.exceptions.SerpApiError as e:
-            print("noo")
-            print(api_key)
-            # If the error status indicates an invalid API key, return False
+        except:
+            print("Serp Key failed")
             return False
         
     if for_which == "OpenAI":

@@ -14,7 +14,7 @@
         <ul>
             <li><a href='index.html'>Home</a></li>
             <li><a href='#'>Sources</a></li>
-            <li><a href='#'>Archive</a></li>
+            <li><a class="openmodale" href='#'>DashBoard</a></li>
         </ul>
         <img src="/static/logo.png">
     </nav>
@@ -30,6 +30,21 @@
         </div>
     </div>
     
+
+    <img id="dashboardImage" class="dash" src="{{ url_for('display_image') }}" alt="">
+
+<!-- <div class="modale"  aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <a href="#" class="btn-close closemodale" aria-hidden="true">&times;</a>
+        <img id="dashboardImage" class="dash" src=""  alt="">
+      </div>
+      
+      
+  
+    </div>
+  </div> -->
+  
     
     <script src="/static/result.js"></script>
 </body>
