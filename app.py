@@ -1,9 +1,18 @@
 # app.py
 
-
+log_str = ""
 ## Importing Dependencies
 from time import time
 app_start_time = time()
+
+import datetime as dt
+
+# Get the current time in India timezone
+dt_India_aware = dt.datetime.now(dt.timezone(dt.timedelta(hours=5, minutes=30)))
+log1 = f"Application Started at {dt_India_aware}\n\n"
+
+# Format the datetime object
+formatted_date = dt_India_aware.strftime("%dth %b %Y, %I:%M%p")
 
 from flask import Flask, render_template, request, jsonify,redirect, url_for,escape,session,send_from_directory
 import html
@@ -57,6 +66,7 @@ from pymongo import MongoClient
 import certifi
 ca = certifi.where()
 
+log2 = f"Importing modules completed. Time taken: {app_start_time - time()}"
 
 app = Flask(__name__)
 
@@ -148,6 +158,9 @@ def process_files():
 
 @app.route('/scrape', methods=['POST'])
 def scrape():
+    log3, log4, log5, log6, log7, log8, log9, log10, log11, log12, log13, log14, log15, log16, log17, log18, log19, log20 = '','','','','','','','','','','','','','','','','',''
+    scrape_start_time = time()
+
     print("""
          ____                    ____                                 
         |  _ \  ___  ___ _ __   / ___|  ___ _ __ __ _ _ __   ___ _ __ 
@@ -199,7 +212,7 @@ def scrape():
 
     SEARCH_BAR_SCRAPE = 0
     GENERAL_DEEP_SCRAPE = 0
-    ADVANCED_SEARCH = 1
+    ADVANCED_SEARCH = 0
 
     if len(selectedOptions) != 0:
         for choice in selectedOptions:
@@ -221,7 +234,11 @@ def scrape():
     website_urls3 = []
 
     keywords_list = keyword.split(',')
+
+    log3 = f"Information got from front end: {scrape_start_time - time():.2f}s\nScraping will start now...\n\n"
     
+    temp_time = time()
+
     if SEARCH_BAR_SCRAPE == 1:
         S = " Search Bar Scrape "
         print("\n\n"+S.center(100, '=')+"\n")
@@ -258,6 +275,10 @@ def scrape():
         
         print("\n".join(website_urls1[:10]))
 
+        log4 = f"Search bar scrape completed in: {temp_time - time():.2f}s\n"
+        log5 = f"Results got: {len(website_urls1)}\n\n"
+        
+    temp_time = time()
     if GENERAL_DEEP_SCRAPE == 1:
 
         S = " General Deep Scrape "
@@ -276,7 +297,11 @@ def scrape():
         ## Joining sub urls into one single list
         website_urls2 = [item for sublist in list(inside_urls2.values()) for item in sublist]
         print("\n".join(website_urls2[3:13]))
+
+        log6 = f"General Deep scrape completed in: {temp_time - time():.2f}s\n"
+        log7 = f"Results got: {len(website_urls2)}\n\n"
         
+    temp_time = time()
     if ADVANCED_SEARCH == 1:
 
         S = " Advanced Search "
@@ -317,6 +342,8 @@ def scrape():
             print(f"From date was modified due to less results: {from_date_modified}")
             try_times += 1
 
+        log8 = f"From date in advaced scrape was modified from {from_date_str} to {from_date_modified}\n\n"
+
         # import pdb;pdb.set_trace()
         if search_dict['search_information']['news_results_state'] != 'Fully empty':
             link_results = [search_dict['news_results'][i]['link'] for i in range(len(search_dict['news_results']))]
@@ -324,15 +351,19 @@ def scrape():
 
         website_urls3 = link_results
         print("\n".join(website_urls3[:10]))
-
+        
+        log9 = f"Results got: {len(website_urls3)}, in {try_times} times\n"
+        log10 = f"Advanced scrape completed in: {temp_time - time():.2f}s\n\n"
 
     website_urls = website_urls1 + website_urls2 + website_urls3
 
     if len(website_urls) == 0:
         response_complete = "There was nothing to display\n\nKeywords did'nt match any urls\nPlease add additional urls"
-       
+    
     else:
         print("length of urls: ",len(website_urls))
+
+        temp_time = time()
 
         S = " Importing Database for Date "
         print("\n\n"+S.center(100, '=')+"\n")
@@ -354,9 +385,13 @@ def scrape():
 
         ### Urls that arent yet indexed in db
         df_of_which_to_find_the_date_of = pd.merge(mongo_date_df, urls_from_extraction, how = "outer")
+        log11 = f"Recognized urls: {len(df_of_which_to_find_the_date_of)}\n"
         df_of_which_to_find_the_date_of = df_of_which_to_find_the_date_of.loc[~df_of_which_to_find_the_date_of['Date'].notna(), :] # Dates that are yet found out
         df_of_which_to_find_the_date_of = df_of_which_to_find_the_date_of.drop_duplicates(subset='url', keep='first')              # Dropping duplicates if any
 
+        log12 = f"Importing DB from mongo and preprocessing df completed in: {temp_time - time():.2f}s\n\n"
+
+        temp_time = time()
 
         S = " Getting Dates for "
         print("\n\n"+S.center(100, '=')+"\n")
@@ -387,12 +422,13 @@ def scrape():
             else:
                 print(f"Skipping {url} due to timeout of {timeout_seconds}s")
 
-            
+        log13 = f"Amount of dates that needed to be fetched: {len(list_of_which_to_find_the_date_of)}\n"
+        log14 = f"dates Fetching completed in: {temp_time - time():.2f}s\n\n"
         url_date_dict = {i[0] : i[1] for i in url_date_list}
         
 
         # Insert the document into the collection
-
+        temp_time = time()
         S = " Indexing to Database "
         print("\n\n"+S.center(100, '=')+"\n")
 
@@ -402,6 +438,8 @@ def scrape():
 
 
         save_to_mongo(date_db_name, collection_db_name, data = data)
+
+        log15 = f"Dated Indexed back to mongo in: {temp_time - time():.2f}s\n\n"
 
         urls_date_df = pd.merge(urls_from_extraction, mongo_date_df, on='url', how='inner').sort_values(by="Date",ascending=False)
         # urls_date_df.to_csv('url_date.csv')
@@ -429,10 +467,10 @@ def scrape():
             if try_times == 4:
                 break
             try_times += 1
-
-        # import pdb;pdb.set_trace()
         
         print(f"Amount of urls between the dates: {df_filtered_by_date.shape[0]}")
+
+        log16 = f"Amount of urls between the dates: {df_filtered_by_date.shape[0]}\n\n"
 
         if df_filtered_by_date.shape[0] >= 0:
 
@@ -459,6 +497,7 @@ def scrape():
             S = " Getting html content for particular urls "
             print("\n\n"+S.center(100, '=')+"\n")
             
+            temp_time = time()
 
             url_html_df_date_sorted = mongo_html_df[mongo_html_df['url'].isin(list(df_filtered_by_date["url"]))]
 
@@ -468,6 +507,8 @@ def scrape():
 
                 else:
                     url_html_df_date_sorted = rerank_df(df = url_html_df_date_sorted, col_to_rank="Html", col_to_address="url", query= " ".join(keywords_list) , pprint=True, api_key=api_keys.cohere_key_list[0]) #.iloc[:,:2]
+                log17 = f"Sorting completed in {temp_time - time():.2f}"
+
             # url_html_df_date_sorted.to_csv("url_Html2.csv", index = False)
             if len(url_html_df_date_sorted) != 0:
                 sources_str = "\n\n".join(list(url_html_df_date_sorted.url)[:20])
@@ -528,6 +569,9 @@ def scrape():
                 question = prompt
                 print(f"Itterations: {iterations}")
                 response_complete = ''
+
+                temp_time = time()
+
                 for data_idx in tqdm(range(iterations)):
 
                     prompt = f""" 
@@ -543,6 +587,7 @@ def scrape():
                     response = get_completion2(prompt)
                     response_complete += response + "\n\n"
                     print(f"Batch {data_idx + 1} out of {iterations} completed ")
+                log18 = f"Openai execution of {iterations} itteration completed in {temp_time - time()}"
 
         else:
             response_complete = "There was nothing to display\n\nURLS dont exist within the particular Time frame\nPlease try expanding the time frame and try again"
@@ -577,6 +622,11 @@ def scrape():
 
     session['result_content'] = Markup(response_complete_clickable)
     session['sources_content']=Markup(sources);
+
+    log_str = log1+log2+log3+log4+log5+log6+log7+log8+log9+log10+log11+log12+log13+log14+log15+log16+log17+log18+log19+log20 
+    with open("Logs.txt" , "w") as f:
+        f.write(log_str)
+
     return redirect('/result')
     # print("session content:", session)
     # encoded_content = quote(response_complete)----this should be added
@@ -588,6 +638,8 @@ def scrape():
     # print("Transformed response_complete:", response_complete)
 
     # return redirect(url_for('result', response_complete=response_complete))
+
+    log19 = f"Scraping Completed in {app_start_time - time():.2f}s"
 
 
 

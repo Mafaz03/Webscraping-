@@ -1,0 +1,21 @@
+Application Started at 2024-03-03 23:33:01.548557+05:30
+
+Importing modules completed. Time taken: -3.3320119380950928Information got from front end: -0.00s
+Scraping will start now...
+
+From date in advaced scrape was modified from 2022-3-3 to 03-03-2022
+
+Results got: 100, in 0 times
+Advanced scrape completed in: -0.09s
+
+Recognized urls: 4991
+Importing DB from mongo and preprocessing df completed in: -1.20s
+
+Amount of dates that needed to be fetched: 0
+dates Fetching completed in: -0.02s
+
+Dated Indexed back to mongo in: -0.35s
+
+Amount of urls between the dates: 100
+
+Sorting completed in -2.38Openai execution of 4 itteration completed in -62.234593868255615
