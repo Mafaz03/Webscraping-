@@ -20,6 +20,7 @@ import openai
 import pandas as pd
 import numpy as np 
 from time import sleep
+from datetime import date
 
 from serpapi import GoogleSearch
 
@@ -69,7 +70,6 @@ def index():
 @app.route('/chatbot')
 def chat_bot():
     return render_template('home.html')
-
 
 
 @app.route("/get")
@@ -157,6 +157,8 @@ def scrape():
                         |_|                          |_|                
         """)
         
+    sources_str = 'failed to fetch'
+    
     data = request.get_json()
     print("Received Data:",data)
     url = data.get('urls')
@@ -169,7 +171,17 @@ def scrape():
     to_date_str = data.get('to_date')
 
 
+    today = date.today()
+    if to_date_str == '':
+        to_date_str = str(today)
+
+    if from_date_str == '':
+        from_date_str = str(today.year - 2) + '-' + str(today.month) + '-' +str(today.day)
+
+    
+
     from_date = datetime.strptime(from_date_str, '%Y-%m-%d').strftime('%d-%m-%Y')
+    from_date_modified = from_date
     to_date = datetime.strptime(to_date_str, '%Y-%m-%d').strftime('%d-%m-%Y')
 
     selectedOptions = data.get('selectedOption', [])
@@ -187,7 +199,7 @@ def scrape():
 
     SEARCH_BAR_SCRAPE = 0
     GENERAL_DEEP_SCRAPE = 0
-    ADVANCED_SEARCH = 0
+    ADVANCED_SEARCH = 1
 
     if len(selectedOptions) != 0:
         for choice in selectedOptions:
@@ -293,7 +305,6 @@ def scrape():
         #"-".join(from_date.split("-")[:2] + [str((int(from_date.split("-")[2]) + 2))])
         #search.get_dict()['search_information']['news_results_state'] == 'Fully empty'
         try_times = 0
-        from_date_modified = from_date
         while search_dict['search_information']['news_results_state'] == 'Fully empty':
             from_date_modified = "-".join(from_date_modified.split("-")[:2] + [str((int(from_date_modified.split("-")[2]) - 2))])
             params['tbs'] = f"cdr:1,cd_min:{from_date_modified},cd_max:{to_date.replace('-', '/')}",
@@ -406,8 +417,20 @@ def scrape():
 
         start_date = pd.to_datetime(from_date_modified,format='%d-%m-%Y')
         end_date = pd.to_datetime(to_date,format='%d-%m-%Y')
+        df_filtered_by_date = df_filtered_by_date = urls_date_df[(urls_date_df["Date"] >= start_date) & (urls_date_df["Date"] <= end_date)]
+        
+        try_times = 0
+        while len(df_filtered_by_date) < 2:
+            start_date = pd.to_datetime(from_date_modified,format='%d-%m-%Y')
+            df_filtered_by_date = urls_date_df[(urls_date_df["Date"] >= start_date) & (urls_date_df["Date"] <= end_date)]
+            from_date_modified = "-".join(from_date_modified.split("-")[:2] + [str((int(from_date_modified.split("-")[2]) - 2))])
+            df_filtered_by_date = df_filtered_by_date = urls_date_df[(urls_date_df["Date"] >= start_date) & (urls_date_df["Date"] <= end_date)]
 
-        df_filtered_by_date = urls_date_df[(urls_date_df["Date"] >= start_date) & (urls_date_df["Date"] <= end_date)]
+            if try_times == 4:
+                break
+            try_times += 1
+
+        # import pdb;pdb.set_trace()
         
         print(f"Amount of urls between the dates: {df_filtered_by_date.shape[0]}")
 
@@ -445,81 +468,81 @@ def scrape():
 
                 else:
                     url_html_df_date_sorted = rerank_df(df = url_html_df_date_sorted, col_to_rank="Html", col_to_address="url", query= " ".join(keywords_list) , pprint=True, api_key=api_keys.cohere_key_list[0]) #.iloc[:,:2]
-            url_html_df_date_sorted.to_csv("url_Html2.csv", index = False)
+            # url_html_df_date_sorted.to_csv("url_Html2.csv", index = False)
+            if len(url_html_df_date_sorted) != 0:
+                sources_str = "\n\n".join(list(url_html_df_date_sorted.url)[:20])
 
-            sources_str = "\n\n".join(list(url_html_df_date_sorted.url)[:20])
+                page = 1
+                amount_of_content = 20
+                url_html_df_date_sorted_20 = url_html_df_date_sorted[(page - 1) * amount_of_content : amount_of_content * page]  # Only 10 at a time
 
-            page = 1
-            amount_of_content = 20
-            url_html_df_date_sorted_20 = url_html_df_date_sorted[(page - 1) * amount_of_content : amount_of_content * page]  # Only 10 at a time
+                dashboard(urls_date_df, url_html_df_date_sorted_20, from_date, to_date, amount_of_content)
 
-            dashboard(urls_date_df, url_html_df_date_sorted_20, from_date, to_date, amount_of_content)
+                print(f"Relavancy Score of page number: {page} is: {url_html_df_date_sorted_20.Relevance_Score.median():.3f}")
 
-            print(f"Relavancy Score of page number: {page} is: {url_html_df_date_sorted_20.Relevance_Score.median():.3f}")
-
-            url_html_dict = url_html_df_date_sorted_20.set_index('url')['Html'].to_dict()
-            url_html_dict = {key : clean_and_extract(value) for key,value in url_html_dict.items()}  # Cleaning the Text
-            
-            # url_html_df = pd.DataFrame(list(url_html_dict.items()), columns=['url', 'Html'])
-            # url_html_df.to_csv("url_Html.csv", index = False)
-
-            try:
-                del url_html_extracted["_id"]
-                print("Deleted _id")
-            except:
-                pass
-
-            url_extracted_html = kep(website_content = url_html_dict, keywords = " ", filter_by_amount = 30)
-            # url_extracted_html = url_html_dict
-
-            url_html_content_txt = ''
-            for key, val in url_extracted_html.items():
-                url_html_content_txt += key + '\n\n' + val + '\n\n' + '-'*50 + '\n\n'
-
-            with open(f"Output text/{datetime.now()}.txt", "w") as f:
-                f.write(url_html_content_txt)
-
-            content_list = [(key,value[:2000]) for key, value in url_extracted_html.items()] # 2000 is temporary until tokenier function is not set up
-
-            MAX_CONTENT = 5
-
-            content_list_complete = []
-
-            iterations = len(content_list) // MAX_CONTENT
-
-
-            for i in range(iterations):
-                sub_content_list = content_list[MAX_CONTENT * i: MAX_CONTENT * (i + 1)]
-                content_list_complete.append(sub_content_list)
-
-
-            # Handle remaining elements after the loop
-            remaining_elements = content_list[MAX_CONTENT * iterations:]
-            if remaining_elements:
-                iterations += 1
-                content_list_complete.append(remaining_elements)
-
-            S = " Openai's api execution "
-            print("\n\n"+S.center(100, '=')+"\n")
-
-            question = prompt
-            print(f"Itterations: {iterations}")
-            response_complete = ''
-            for data_idx in tqdm(range(iterations)):
-
-                prompt = f""" 
-                    Data is in the form of tuples inside list: {content_list_complete[data_idx]} \n\n\n 
-                    Question: {question} \n\n\n
-                    Method of reply: 100 - 200 word sentences, clear reply,
-                    provide url if neccessary.
-                    """
+                url_html_dict = url_html_df_date_sorted_20.set_index('url')['Html'].to_dict()
+                url_html_dict = {key : clean_and_extract(value) for key,value in url_html_dict.items()}  # Cleaning the Text
                 
-                if data_idx +1 % 6 == 0:
-                    sleep(20)
+                # url_html_df = pd.DataFrame(list(url_html_dict.items()), columns=['url', 'Html'])
+                # url_html_df.to_csv("url_Html.csv", index = False)
 
-                response = get_completion2(prompt)
-                response_complete += response + "\n\n"
-                print(f"Batch {data_idx + 1} out of {iterations} completed ")
+                try:
+                    del url_html_extracted["_id"]
+                    print("Deleted _id")
+                except:
+                    pass
+
+                url_extracted_html = kep(website_content = url_html_dict, keywords = " ", filter_by_amount = 30)
+                # url_extracted_html = url_html_dict
+
+                url_html_content_txt = ''
+                for key, val in url_extracted_html.items():
+                    url_html_content_txt += key + '\n\n' + val + '\n\n' + '-'*50 + '\n\n'
+
+                with open(f"Output text/{datetime.now()}.txt", "w") as f:
+                    f.write(url_html_content_txt)
+
+                content_list = [(key,value[:2000]) for key, value in url_extracted_html.items()] # 2000 is temporary until tokenier function is not set up
+
+                MAX_CONTENT = 5
+
+                content_list_complete = []
+
+                iterations = len(content_list) // MAX_CONTENT
+
+
+                for i in range(iterations):
+                    sub_content_list = content_list[MAX_CONTENT * i: MAX_CONTENT * (i + 1)]
+                    content_list_complete.append(sub_content_list)
+
+
+                # Handle remaining elements after the loop
+                remaining_elements = content_list[MAX_CONTENT * iterations:]
+                if remaining_elements:
+                    iterations += 1
+                    content_list_complete.append(remaining_elements)
+
+                S = " Openai's api execution "
+                print("\n\n"+S.center(100, '=')+"\n")
+
+                question = prompt
+                print(f"Itterations: {iterations}")
+                response_complete = ''
+                for data_idx in tqdm(range(iterations)):
+
+                    prompt = f""" 
+                        Data is in the form of tuples inside list: {content_list_complete[data_idx]} \n\n\n 
+                        Question: {question} \n\n\n
+                        Method of reply: 100 - 200 word sentences, clear reply,
+                        provide url if neccessary.
+                        """
+                    
+                    if data_idx +1 % 6 == 0:
+                        sleep(20)
+
+                    response = get_completion2(prompt)
+                    response_complete += response + "\n\n"
+                    print(f"Batch {data_idx + 1} out of {iterations} completed ")
 
         else:
             response_complete = "There was nothing to display\n\nURLS dont exist within the particular Time frame\nPlease try expanding the time frame and try again"
