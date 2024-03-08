@@ -1,21 +1,54 @@
-Application Started at 2024-03-03 23:33:01.548557+05:30
+http://postcourier.com.pg
+Keywords: road, project, road project
+Prompt: development in Africa
+From date: 2024-01-04
+To date: 2024-03-08
 
-Importing modules completed. Time taken: -3.3320119380950928Information got from front end: -0.00s
-Scraping will start now...
+####################
 
-From date in advaced scrape was modified from 2022-3-3 to 03-03-2022
+Options:
 
-Results got: 100, in 0 times
-Advanced scrape completed in: -0.09s
+SEARCH_BAR_SCRAPE: 1
+GENERAL_DEEP_SCRAPE: 1
+ADVANCED_SEARCH :1
+########################################
+SEARCH BAR SCRAPESearch bar scrape completed in: 16.51s
+Results got: 22
 
-Recognized urls: 4991
-Importing DB from mongo and preprocessing df completed in: -1.20s
+########################################
+GENERAL DEEP SEARCH
+General Deep scrape completed in: 0.29s
+Results got: 1
 
-Amount of dates that needed to be fetched: 0
-dates Fetching completed in: -0.02s
+########################################
+ADVANCED SEARCH 0
+From date in advaced scrape was modified from 2024-01-04 to 04-01-2022
 
-Dated Indexed back to mongo in: -0.35s
+Results got: 70, in 1 tries
+Advanced scrape 0 completed in: 0.15s
 
-Amount of urls between the dates: 100
+####################
+Total urls collected: 93
+https://www.postcourier.com.pg/china-town-to-malahang-road-commissioned/
+https://www.postcourier.com.pg/potholes-on-williams-road/
+https://www.postcourier.com.pg/priority-given-to-industrial-roads/
+https://www.postcourier.com.pg/search/%20road%20project/page/2/
+https://www.postcourier.com.pg/search/%20road%20project/page/246/
+https://www.postcourier.com.pg/road-project-to-benefit-wards/
+https://www.postcourier.com.pg/search/road/page/2/
+https://www.postcourier.com.pg/search/road/page/874/
+https://www.postcourier.com.pg/more-road-projects-and-new-suburbs/
+https://www.postcourier.com.pg/road-traffic-authority-launch-new-system/
+Importing DB from mongo and preprocessing df completed in: 1.52s
 
-Sorting completed in -2.38Openai execution of 4 itteration completed in -62.234593868255615
+Amount of dates that needed to be fetched: 19
+Dates fetching completed in: 29.97s
+
+Dated Indexed back to mongo in: 0.44s
+
+Amount of urls between the dates: 73
+
+Sorting completed in 1.18s
+Openai execution of 4 itteration completed in 32.03s
+
+Total time: 122.15s

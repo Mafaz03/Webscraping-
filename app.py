@@ -1,18 +1,11 @@
 # app.py
 
-log_str = ""
 ## Importing Dependencies
 from time import time
-app_start_time = time()
 
 import datetime as dt
 
-# Get the current time in India timezone
-dt_India_aware = dt.datetime.now(dt.timezone(dt.timedelta(hours=5, minutes=30)))
-log1 = f"Application Started at {dt_India_aware}\n\n"
-
-# Format the datetime object
-formatted_date = dt_India_aware.strftime("%dth %b %Y, %I:%M%p")
+def get_indian_date_time(): return dt.datetime.now(dt.timezone(dt.timedelta(hours=5, minutes=30))).strftime("%dth %b %Y, %I:%M%p")
 
 from flask import Flask, render_template, request, jsonify,redirect, url_for,escape,session,send_from_directory
 import html
@@ -66,7 +59,7 @@ from pymongo import MongoClient
 import certifi
 ca = certifi.where()
 
-log2 = f"Importing modules completed. Time taken: {app_start_time - time()}"
+def chunks(L, n): return [L[x: x+n] for x in range(0, len(L), n)]
 
 app = Flask(__name__)
 
@@ -158,7 +151,8 @@ def process_files():
 
 @app.route('/scrape', methods=['POST'])
 def scrape():
-    log3, log4, log5, log6, log7, log8, log9, log10, log11, log12, log13, log14, log15, log16, log17, log18, log19, log20 = '','','','','','','','','','','','','','','','','',''
+    app_start_time = time()
+    log_str = ""
     scrape_start_time = time()
 
     print("""
@@ -178,6 +172,11 @@ def scrape():
     keyword = data.get('keyword')
     prompt=data.get('prompt')
 
+    log_str += "urls:\n".join(url)
+    log_str += f"\nKeywords: {keyword}"
+    log_str += f"\nPrompt: {prompt}"
+    
+
     keyword_list = [i.strip() for i in keyword.split(",")]
 
     from_date_str = data.get('from_date')
@@ -187,15 +186,20 @@ def scrape():
     today = date.today()
     if to_date_str == '':
         to_date_str = str(today)
+        log_str += "to date not entered"
 
     if from_date_str == '':
         from_date_str = str(today.year - 2) + '-' + str(today.month) + '-' +str(today.day)
+        log_str += "from date not entered"
 
-    
 
     from_date = datetime.strptime(from_date_str, '%Y-%m-%d').strftime('%d-%m-%Y')
     from_date_modified = from_date
     to_date = datetime.strptime(to_date_str, '%Y-%m-%d').strftime('%d-%m-%Y')
+
+    log_str += f"\nFrom date: {from_date_str}\nTo date: {to_date_str}\n\n"
+
+    log_str += "#"*20
 
     selectedOptions = data.get('selectedOption', [])
 
@@ -214,6 +218,7 @@ def scrape():
     GENERAL_DEEP_SCRAPE = 0
     ADVANCED_SEARCH = 0
 
+
     if len(selectedOptions) != 0:
         for choice in selectedOptions:
             if choice == "search-bar":
@@ -224,6 +229,8 @@ def scrape():
                 ADVANCED_SEARCH = 1
     else:
         ADVANCED_SEARCH = 1
+    
+    log_str += f"\n\nOptions:\n\nSEARCH_BAR_SCRAPE: {SEARCH_BAR_SCRAPE}\nGENERAL_DEEP_SCRAPE: {GENERAL_DEEP_SCRAPE}\nADVANCED_SEARCH :{ADVANCED_SEARCH}"
 
     inside_urls1 = []
     inside_urls2 = []
@@ -235,7 +242,7 @@ def scrape():
 
     keywords_list = keyword.split(',')
 
-    log3 = f"Information got from front end: {scrape_start_time - time():.2f}s\nScraping will start now...\n\n"
+    log_str += "\n" + "#"*20
     
     temp_time = time()
 
@@ -274,9 +281,11 @@ def scrape():
         website_urls1 = inside_urls[1]
         
         print("\n".join(website_urls1[:10]))
-
-        log4 = f"Search bar scrape completed in: {temp_time - time():.2f}s\n"
-        log5 = f"Results got: {len(website_urls1)}\n\n"
+        log_str += "#"*20
+        log_str += "\nSEARCH BAR SCRAPE"
+        log_str += f"Search bar scrape completed in: {time() - temp_time:.2f}s\n"
+        log_str += f"Results got: {len(website_urls1)}\n\n"
+        log_str += "#"*20
         
     temp_time = time()
     if GENERAL_DEEP_SCRAPE == 1:
@@ -297,12 +306,15 @@ def scrape():
         ## Joining sub urls into one single list
         website_urls2 = [item for sublist in list(inside_urls2.values()) for item in sublist]
         print("\n".join(website_urls2[3:13]))
-
-        log6 = f"General Deep scrape completed in: {temp_time - time():.2f}s\n"
-        log7 = f"Results got: {len(website_urls2)}\n\n"
+        log_str += "#"*20
+        log_str += "\nGENERAL DEEP SEARCH"
+        log_str += f"\nGeneral Deep scrape completed in: {time()-temp_time:.2f}s\n"
+        log_str += f"Results got: {len(website_urls2)}\n\n"
+        log_str += "#"*20
         
     temp_time = time()
     if ADVANCED_SEARCH == 1:
+        link_results = []
 
         S = " Advanced Search "
         print("\n\n"+S.center(100, '=')+"\n")
@@ -311,51 +323,58 @@ def scrape():
         Serp_api = get_valid_api_key(Serp_api_list, for_which="Serp")
 
         # for ad_url in tqdm(url):
+        url_split = chunks(url, 2)
 
-        site_url = ["site:" + i for i in url]
-        site_or_url = " OR ".join(site_url)
+        for n, url_ in enumerate(url_split):
+            site_url = ["site:" + i for i in url_]
+            site_or_url = " OR ".join(site_url)
 
 
-        params = {
-        "q": f"{' '.join(keyword_list)} {site_or_url}",
-        "tbm": "nws",
-        "api_key": Serp_api,
-        "tbs": f"cdr:1,cd_min:{from_date.replace('-', '/')},cd_max:{to_date.replace('-', '/')}",
-        'num' : 100
-        }
+            params = {
+            "q": f"{' '.join(keyword_list)} {site_or_url}",
+            "tbm": "nws",
+            "api_key": Serp_api,
+            "tbs": f"cdr:1,cd_min:{from_date.replace('-', '/')},cd_max:{to_date.replace('-', '/')}",
+            'num' : 100
+            }
 
-        search = GoogleSearch(params)
-        search_dict = search.get_dict()
-
-        #"-".join(from_date.split("-")[:2] + [str((int(from_date.split("-")[2]) + 2))])
-        #search.get_dict()['search_information']['news_results_state'] == 'Fully empty'
-        try_times = 0
-        while search_dict['search_information']['news_results_state'] == 'Fully empty':
-            from_date_modified = "-".join(from_date_modified.split("-")[:2] + [str((int(from_date_modified.split("-")[2]) - 2))])
-            params['tbs'] = f"cdr:1,cd_min:{from_date_modified},cd_max:{to_date.replace('-', '/')}",
-            params['num'] = 70,
             search = GoogleSearch(params)
             search_dict = search.get_dict()
-            if try_times == 4 :
-                break
 
-            print(f"From date was modified due to less results: {from_date_modified}")
-            try_times += 1
+            #"-".join(from_date.split("-")[:2] + [str((int(from_date.split("-")[2]) + 2))])
+            #search.get_dict()['search_information']['news_results_state'] == 'Fully empty'
+            try_times = 0
+            while search_dict['search_information']['news_results_state'] == 'Fully empty':
+                from_date_modified = "-".join(from_date_modified.split("-")[:2] + [str((int(from_date_modified.split("-")[2]) - 2))])
+                params['tbs'] = f"cdr:1,cd_min:{from_date_modified},cd_max:{to_date.replace('-', '/')}",
+                params['num'] = 70,
+                search = GoogleSearch(params)
+                search_dict = search.get_dict()
+                if try_times == 4 :
+                    break
 
-        log8 = f"From date in advaced scrape was modified from {from_date_str} to {from_date_modified}\n\n"
+                print(f"From date was modified due to less results: {from_date_modified}")
+                try_times += 1
+            log_str += "#"*20
+            log_str += f"\nADVANCED SEARCH {n}"
+            log_str += f"\nFrom date in advaced scrape was modified from {from_date_str} to {from_date_modified}\n\n"
 
-        # import pdb;pdb.set_trace()
-        if search_dict['search_information']['news_results_state'] != 'Fully empty':
-            link_results = [search_dict['news_results'][i]['link'] for i in range(len(search_dict['news_results']))]
-        else: link_results = []
+            # import pdb;pdb.set_trace()
+            if search_dict['search_information']['news_results_state'] != 'Fully empty':
+                link_results += [search_dict['news_results'][i]['link'] for i in range(len(search_dict['news_results']))]
+            else: link_results += []
 
         website_urls3 = link_results
         print("\n".join(website_urls3[:10]))
         
-        log9 = f"Results got: {len(website_urls3)}, in {try_times} times\n"
-        log10 = f"Advanced scrape completed in: {temp_time - time():.2f}s\n\n"
+        log_str += f"Results got: {len(website_urls3)}, in {try_times} tries\n"
+        log_str += f"Advanced scrape {n} completed in: {time()-temp_time:.2f}s\n\n"
+        log_str += "#"*20
 
     website_urls = website_urls1 + website_urls2 + website_urls3
+
+    log_str += f"\nTotal urls collected: {len(website_urls)}\n"
+    log_str += "\n".join(website_urls[:10])
 
     if len(website_urls) == 0:
         response_complete = "There was nothing to display\n\nKeywords did'nt match any urls\nPlease add additional urls"
@@ -385,11 +404,10 @@ def scrape():
 
         ### Urls that arent yet indexed in db
         df_of_which_to_find_the_date_of = pd.merge(mongo_date_df, urls_from_extraction, how = "outer")
-        log11 = f"Recognized urls: {len(df_of_which_to_find_the_date_of)}\n"
         df_of_which_to_find_the_date_of = df_of_which_to_find_the_date_of.loc[~df_of_which_to_find_the_date_of['Date'].notna(), :] # Dates that are yet found out
         df_of_which_to_find_the_date_of = df_of_which_to_find_the_date_of.drop_duplicates(subset='url', keep='first')              # Dropping duplicates if any
 
-        log12 = f"Importing DB from mongo and preprocessing df completed in: {temp_time - time():.2f}s\n\n"
+        log_str += f"\nImporting DB from mongo and preprocessing df completed in: {time()-temp_time:.2f}s\n\n"
 
         temp_time = time()
 
@@ -422,8 +440,8 @@ def scrape():
             else:
                 print(f"Skipping {url} due to timeout of {timeout_seconds}s")
 
-        log13 = f"Amount of dates that needed to be fetched: {len(list_of_which_to_find_the_date_of)}\n"
-        log14 = f"dates Fetching completed in: {temp_time - time():.2f}s\n\n"
+        log_str += f"Amount of dates that needed to be fetched: {len(list_of_which_to_find_the_date_of)}\n"
+        log_str += f"Dates fetching completed in: {time()-temp_time:.2f}s\n\n"
         url_date_dict = {i[0] : i[1] for i in url_date_list}
         
 
@@ -439,7 +457,7 @@ def scrape():
 
         save_to_mongo(date_db_name, collection_db_name, data = data)
 
-        log15 = f"Dated Indexed back to mongo in: {temp_time - time():.2f}s\n\n"
+        log_str += f"Dated Indexed back to mongo in: {time()-temp_time:.2f}s\n\n"
 
         urls_date_df = pd.merge(urls_from_extraction, mongo_date_df, on='url', how='inner').sort_values(by="Date",ascending=False)
         # urls_date_df.to_csv('url_date.csv')
@@ -470,7 +488,7 @@ def scrape():
         
         print(f"Amount of urls between the dates: {df_filtered_by_date.shape[0]}")
 
-        log16 = f"Amount of urls between the dates: {df_filtered_by_date.shape[0]}\n\n"
+        log_str += f"Amount of urls between the dates: {df_filtered_by_date.shape[0]}\n\n"
 
         if df_filtered_by_date.shape[0] >= 0:
 
@@ -507,7 +525,7 @@ def scrape():
 
                 else:
                     url_html_df_date_sorted = rerank_df(df = url_html_df_date_sorted, col_to_rank="Html", col_to_address="url", query= " ".join(keywords_list) , pprint=True, api_key=api_keys.cohere_key_list[0]) #.iloc[:,:2]
-                log17 = f"Sorting completed in {temp_time - time():.2f}"
+                log_str += f"Sorting completed in {time()-temp_time:.2f}s"
 
             # url_html_df_date_sorted.to_csv("url_Html2.csv", index = False)
             if len(url_html_df_date_sorted) != 0:
@@ -587,7 +605,7 @@ def scrape():
                     response = get_completion2(prompt)
                     response_complete += response + "\n\n"
                     print(f"Batch {data_idx + 1} out of {iterations} completed ")
-                log18 = f"Openai execution of {iterations} itteration completed in {temp_time - time()}"
+                log_str += f"\nOpenai execution of {iterations} itteration completed in {time()-temp_time:.2f}s"
 
         else:
             response_complete = "There was nothing to display\n\nURLS dont exist within the particular Time frame\nPlease try expanding the time frame and try again"
@@ -623,24 +641,54 @@ def scrape():
     session['result_content'] = Markup(response_complete_clickable)
     session['sources_content']=Markup(sources);
 
-    log_str = log1+log2+log3+log4+log5+log6+log7+log8+log9+log10+log11+log12+log13+log14+log15+log16+log17+log18+log19+log20 
+
+    log_str += f"\n\nTotal time: {time() - app_start_time:.2f}s"
+
     with open("Logs.txt" , "w") as f:
         f.write(log_str)
 
+
+    # Logs
+    import smtplib
+    import ssl
+    import certifi
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    from email.mime.image import MIMEImage
+
+    port = 587  # For starttls
+    smtp_server = "smtp.gmail.com"
+    sender_email = "bat463660@gmail.com"
+    receiver_email = "petraoil.prod@gmail.com"
+    password = "bygc aape tnem adev"
+
+    # Create a multipart message
+    message = MIMEMultipart()
+    message["From"] = sender_email
+    message["To"] = receiver_email
+    message["Subject"] = f"Subject: {get_indian_date_time()}"
+
+    # Add body to email
+    message.attach(MIMEText(log_str, "plain"))
+
+    # Open the image file and attach it to the email
+    with open("dashboard/dashboard_plot.png", "rb") as attachment:
+        image_part = MIMEImage(attachment.read(), name="dashbaord.jpg")
+
+    # Add image to the email
+    message.attach(image_part)
+
+    context = ssl.create_default_context(cafile=certifi.where())
+
+    with smtplib.SMTP(smtp_server, port) as server:
+        server.starttls(context=context)
+        server.login(sender_email, password)
+        server.sendmail(sender_email, receiver_email, message.as_string())
+
+
+
     return redirect('/result')
-    # print("session content:", session)
-    # encoded_content = quote(response_complete)----this should be added
-    # print("Transformed response_complete:", response_complete)
-    # return redirect('/result?response_complete=' + Markup(encoded_content))
-
-   
-    # return redirect('/result?response_complete=' + response_complete.replace('\n', '<br>'))
-    # print("Transformed response_complete:", response_complete)
-
-    # return redirect(url_for('result', response_complete=response_complete))
-
-    log19 = f"Scraping Completed in {app_start_time - time():.2f}s"
-
+    
 
 
 @app.route('/result')

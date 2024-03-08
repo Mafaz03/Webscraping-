@@ -17,6 +17,7 @@ openai.api_key = api_key
 def get_completion2(prompt, model = "gpt-3.5-turbo-1106"):
     completion = client.chat.completions.create(
     model="gpt-3.5-turbo-1106",
+    temperature = 0.7,
     messages=[
         {"role": "system", "content": "You are news reporter"},
         {"role": "user", "content": f"{prompt}"}
