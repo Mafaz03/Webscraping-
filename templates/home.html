@@ -473,7 +473,7 @@ width: 100vw;
       </div>
       
       
-      <div class="flex-2">
+      <!-- <div class="flex-2">
         
         <div class="card">
           <h3 class="upload-heading">Upload Multiple Files</h3>
@@ -488,107 +488,113 @@ width: 100vw;
           
         </div>
         
-      </div>
-      
+      </div> -->
+
+      <form id="uploadForm" method="post" enctype="multipart/form-data">
+        <input type="file" name="files[]" id="files" multiple>
+        <input id="uploadButton" type="submit" value="Upload">
+    </form>
+   <div id="errorContainer"></div>
+    <div id="successContainer"></div>
       
       </div>
       <script>
         
-      const dropArea = document.querySelector(".drop_box"),
-      button = dropArea.querySelector("button"),
-      dragText = dropArea.querySelector("header"),
-      input = dropArea.querySelector("input");
+      // const dropArea = document.querySelector(".drop_box"),
+      // button = dropArea.querySelector("button"),
+      // dragText = dropArea.querySelector("header"),
+      // input = dropArea.querySelector("input");
 
 
 
-let fileNames=[];
-button.onclick = () => {
-  input.click();
-};
+// let fileNames=[];
+// button.onclick = () => {
+//   input.click();
+// };
 
-input.addEventListener("change", function (e) {
-  fileNames = [];
+// input.addEventListener("change", function (e) {
+//   fileNames = [];
 
-  for (let i = 0; i < e.target.files.length; i++) {
-    fileNames.push(e.target.files[i].name);
-  }
-  updateFileNames();
-  displayUploadButton();
+//   for (let i = 0; i < e.target.files.length; i++) {
+//     fileNames.push(e.target.files[i].name); // File list from js -> py
+//   }
+//   updateFileNames();
+//   displayUploadButton();
  
-});
+// });
 
-function updateFileNames() {
-  // Creating a new element to display the list of file names
-  var fileNamesElement = document.createElement('div');
-  var fileNamesText = fileNames.join(', ');
-
-
-    var fileNameElement = document.createElement('h4');
-    fileNameElement.textContent = fileNamesText;
-    fileNamesElement.appendChild(fileNameElement);
+// function updateFileNames() {
+//   // Creating a new element to display the list of file names
+//   var fileNamesElement = document.createElement('div');
+//   var fileNamesText = fileNames.join(', ');
 
 
-  // Appending the new element to the dropArea
-  dropArea.appendChild(fileNamesElement);
-}
-
-function displayUploadButton() {
-  // Creating an "Upload and Process" button
-  var uploadButton = document.createElement('button');
-  uploadButton.textContent = "Upload and Process";
-  uploadButton.onclick = uploadAndProcess;
-
-  // Appending the button to the dropArea
-  dropArea.appendChild(uploadButton);
-}
-
-function uploadAndProcess() {
-  // Display a loading message while processing
-  var loadingMessage = document.createElement('p');
-  loadingMessage.textContent = "Uploading and processing...";
-  dropArea.appendChild(loadingMessage);
-
-  // Prepare the FormData object to send files
-  var formData = new FormData();
-  for (let i = 0; i < fileNames.length; i++) {
-    formData.append('files', input.files[i]);
-  }
-
-  // Sending the files to the backend using Fetch API
-  fetch('/process_files', {
-    method: 'POST',
-    body: formData,
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
-    .then(data => {
-      // Handle the response from the server (if needed)
-      console.log('Server response:', data);
-      // You can display a success message here
-      var successMessage = document.createElement('p');
-      successMessage.textContent = "Uploaded and processed successfully";
-      dropArea.appendChild(successMessage);
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      // Display an error message
-      var errorMessage = document.createElement('p');
-      errorMessage.textContent = "Error uploading and processing. Please try again.";
-      dropArea.appendChild(errorMessage);
-    });
-}
+//     var fileNameElement = document.createElement('h4');
+//     fileNameElement.textContent = fileNamesText;
+//     fileNamesElement.appendChild(fileNameElement);
 
 
+//   // Appending the new element to the dropArea
+//   dropArea.appendChild(fileNamesElement);
+// }
+
+// function displayUploadButton() {
+//   // Creating an "Upload and Process" button
+//   var uploadButton = document.createElement('button');
+//   uploadButton.textContent = "Upload and Process";
+//   uploadButton.onclick = uploadAndProcess;
+
+//   // Appending the button to the dropArea
+//   dropArea.appendChild(uploadButton);
+// }
+
+// function uploadAndProcess() {
+//   // Display a loading message while processing
+//   var loadingMessage = document.createElement('p');
+//   loadingMessage.textContent = "Uploading and processing...";
+//   dropArea.appendChild(loadingMessage);
+
+//   // Prepare the FormData object to send files
+//   var formData = new FormData();
+//   for (let i = 0; i < fileNames.length; i++) {
+//     formData.append('files', input.files[i]);
+//   }
+
+//   // Sending the files to the backend using Fetch API
+//   fetch('/process_files', {
+//     method: 'POST',
+//     body: formData,
+//   })
+//     .then(response => {
+//       if (!response.ok) {
+//         throw new Error('Network response was not ok');
+//       }
+//       return response.json();
+//     })
+//     .then(data => {
+//       // Handle the response from the server (if needed)
+//       console.log('Server response:', data);
+//       // You can display a success message here
+//       var successMessage = document.createElement('p');
+//       successMessage.textContent = "Uploaded and processed successfully";
+//       dropArea.appendChild(successMessage);
+//     })
+//     .catch(error => {
+//       console.error('Error:', error);
+//       // Display an error message
+//       var errorMessage = document.createElement('p');
+//       errorMessage.textContent = "Error uploading and processing. Please try again.";
+//       dropArea.appendChild(errorMessage);
+//     });
+// }
 
 
-const fileUploader = document.getElementById('file-uploader');
-const feedback=document.getElementById('feedback');
-const uploadbutton=document.getElementById('uploadBtn');
-const form=document.getElementById('form-file')
+
+
+// const fileUploader = document.getElementById('file-uploader');
+// const feedback=document.getElementById('feedback');
+// const uploadbutton=document.getElementById('uploadBtn');
+// const form=document.getElementById('form-file')
 
 
 
@@ -650,6 +656,45 @@ const form=document.getElementById('form-file')
 //         feedback.innerHTML = 'Error occurred during file upload.';
 //     }
 // });
+
+
+document.getElementById('uploadButton').addEventListener('click', function(event) {
+    event.preventDefault(); // Prevent default form submission
+
+    var formData = new FormData(document.getElementById('uploadForm'));
+
+    fetch('/process_files', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            console.error('Error:', data.error);
+            // Display an error message
+            var errorMessage = document.createElement('p');
+            errorMessage.textContent = data.error;
+            document.getElementById('errorContainer').appendChild(errorMessage);
+        } else {
+            // Handle success
+            console.log('Success:', data.message);
+            // Display a success message
+            var successMessage = document.createElement('p');
+            successMessage.textContent = data.message;
+            document.getElementById('successContainer').appendChild(successMessage);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Display an error message
+        var errorMessage = document.createElement('p');
+        errorMessage.textContent = "Error uploading and processing. Please try again.";
+        document.getElementById('errorContainer').appendChild(errorMessage);
+    });
+});
+
+
+
 
         function getBotResponse() {
           var rawText = $("#textInput").val();

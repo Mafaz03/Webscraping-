@@ -7,7 +7,7 @@ import datetime as dt
 
 def get_indian_date_time(): return dt.datetime.now(dt.timezone(dt.timedelta(hours=5, minutes=30))).strftime("%dth %b %Y, %I:%M%p")
 
-from flask import Flask, render_template, request, jsonify,redirect, url_for,escape,session,send_from_directory
+from flask import Flask, render_template, request, jsonify,redirect, url_for, session,send_from_directory
 import html
 from urllib.parse import quote
 import requests
@@ -38,7 +38,8 @@ from plotting_func import *
 import api_keys
 import matplotlib
 matplotlib.use('agg')
-from flask import Markup
+# from flask import markupsafe.Markup
+from markupsafe import Markup, escape
 
 import openai_func
 import os
@@ -55,11 +56,16 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
 from langchain_community.llms import OpenAI
 
+import tempfile
+
+
+
 from pymongo import MongoClient
 import certifi
 ca = certifi.where()
 
-def chunks(L, n): return [L[x: x+n] for x in range(0, len(L), n)]
+
+
 
 app = Flask(__name__)
 
@@ -105,25 +111,26 @@ def process_files():
        global conversation_context
 
        try:           
+        files = request.files.getlist('files[]')
+        print(files)
+        if not files:
+            return "No files uploaded"
 
-        S = " Entering and verifying files "
-        print("\n\n"+S.center(100, '=')+"\n")
+        texts = []
+        for file in files:
+            filename = file.filename
+            if filename == '':
+                continue
 
-        print("Processing files...")
-          # Get the file names from the FormData object
-        file_contents = [file.filename for file in request.files.getlist('files')]
+            file_extension = filename.rsplit('.', 1)[1].lower()
+            if file_extension in ['pdf', 'txt', 'csv', 'xlsx', 'docx']:
+                text = extract_text(file, file_extension)
+                texts.append((filename, text))
+            else:
+                 return jsonify({'error': f'Unsupported file format: {filename}'})
 
-        # Do something with file_names
-        print('File Names:', file_contents)
-        # file_contents_list = []
-        # file_contents= request.json.get('fileContents',[])
-        for i in file_contents:
-            print(i)
-
-        S = " Generating Embeddings "
-        print("\n\n"+S.center(100, '=')+"\n")
-
-        raw_text = get_raw_text("Output text", file_contents)
+        raw_text = ''.join(text)
+        # raw_text = get_raw_text("Output text", file_contents)
 
         # Split text using Character Text Split
         text_splitter = CharacterTextSplitter(
@@ -142,8 +149,8 @@ def process_files():
 
         # Initialize conversation context
         conversation_context = {"docs": None, "last_question": None}
-
-        return jsonify({'message': 'File data received and processed successfully'})
+        return jsonify({'success': True, 'message': 'File data received and processed successfully'})
+       
        except Exception as e:
             print(f"Error: {e}")
             

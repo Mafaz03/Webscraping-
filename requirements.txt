@@ -18,3 +18,4 @@ langchain_community==0.0.14
 google-search-results
 os
 certifi
+python-docx 

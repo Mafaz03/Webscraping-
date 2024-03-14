@@ -4,6 +4,9 @@ import pandas as pd
 import cohere
 from openai import OpenAI
 import re
+import tempfile
+import textract
+from docx import Document
 
 from flask import Flask, render_template, request
 
@@ -12,6 +15,32 @@ from serpapi import GoogleSearch
 from PyPDF2 import PdfReader
 import os
 
+def chunks(L, n): return [L[x: x+n] for x in range(0, len(L), n)]
+
+def extract_text(file, file_extension):
+    text = ""
+    temp_dir = tempfile.mkdtemp()
+    temp_file_path = os.path.join(temp_dir, file.filename)
+    file.save(temp_file_path)
+    # import pdb;pdb.set_trace()
+    if file_extension == 'pdf':
+        # Extract text and decode bytes into a string
+        text_bytes = textract.process(temp_file_path)
+        text += text_bytes.decode('utf-8')  # Assuming UTF-8 encoding
+    elif file_extension == 'csv':
+        text += "="*20 + pd.read_csv(temp_file_path).to_string()
+    elif file_extension == 'xlsx':
+        text += "="*20 + pd.DataFrame(pd.read_excel(temp_file_path)).to_string()
+    elif file_extension == "docx":
+        doc = Document(temp_file_path)
+        for paragraph in doc.paragraphs:
+            text += paragraph.text + "\n"
+    elif file_extension == 'txt':
+        with open(temp_file_path, 'r', encoding='utf-8') as txt_file:
+            text += txt_file.read()
+    
+    os.remove(temp_file_path)  # Remove the temporary file
+    return text
 
 def make_links_clickable(text):
     # Regular expression to find URLs in the text
