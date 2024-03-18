@@ -1,6 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+from flask_socketio import SocketIO,emit
+from progress import *
+
+# socketio = SocketIO(app)
+
 
 def is_english(text):
     """
@@ -28,11 +33,14 @@ def get_html(urls, mode_of_search = None) :
     website_content: Dictionary {url: html_content}.
     failed_fetch: Number of websites that couldn't be accessed during fetching HTML.
     """
+
     website_content = {}  # Dictionary to store HTML content for each URL
     failed_fetch = 0  # Counter for failed fetch attempts
 
     failed_txt = ["Sorry", "not found", "oops", "try again", "failed", "error"]
-
+    items_completed = 0
+    total_items = len(urls)
+    num_of_output_progress = 10
     # Iterate through each URL in the list
     for website_idx in tqdm(range(len(urls))):
         website = urls[website_idx]
@@ -66,6 +74,13 @@ def get_html(urls, mode_of_search = None) :
         else:
             # If the request was not successful, increment the failed_fetch counter
             failed_fetch += 1
+
+        items_completed += 1
+        try:
+            if items_completed % (total_items // num_of_output_progress) == 0:
+                percentage_complete = (items_completed / total_items) * 100
+                socketio.emit('print_output', {'output': f"{progress_bar_once(word='Completed', percentage=round(percentage_complete, 2), num=30)}"})
+        except: pass
 
     return website_content, failed_fetch
 

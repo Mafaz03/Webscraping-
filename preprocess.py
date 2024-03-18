@@ -6,7 +6,6 @@ from openai import OpenAI
 import re
 import tempfile
 import textract
-from docx import Document
 
 from flask import Flask, render_template, request
 
@@ -22,20 +21,11 @@ def extract_text(file, file_extension):
     temp_dir = tempfile.mkdtemp()
     temp_file_path = os.path.join(temp_dir, file.filename)
     file.save(temp_file_path)
-    # import pdb;pdb.set_trace()
     if file_extension == 'pdf':
         # Extract text and decode bytes into a string
         text_bytes = textract.process(temp_file_path)
         text += text_bytes.decode('utf-8')  # Assuming UTF-8 encoding
-    elif file_extension == 'csv':
-        text += "="*20 + pd.read_csv(temp_file_path).to_string()
-    elif file_extension == 'xlsx':
-        text += "="*20 + pd.DataFrame(pd.read_excel(temp_file_path)).to_string()
-    elif file_extension == "docx":
-        doc = Document(temp_file_path)
-        for paragraph in doc.paragraphs:
-            text += paragraph.text + "\n"
-    elif file_extension == 'txt':
+    elif file_extension == 'txt' or file_extension == 'csv':
         with open(temp_file_path, 'r', encoding='utf-8') as txt_file:
             text += txt_file.read()
     

@@ -6,8 +6,9 @@ from time import time
 import datetime as dt
 
 def get_indian_date_time(): return dt.datetime.now(dt.timezone(dt.timedelta(hours=5, minutes=30))).strftime("%dth %b %Y, %I:%M%p")
+india_time = get_indian_date_time()
 
-from flask import Flask, render_template, request, jsonify,redirect, url_for, session,send_from_directory
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, send_from_directory
 import html
 from urllib.parse import quote
 import requests
@@ -27,6 +28,7 @@ from datetime import date
 from serpapi import GoogleSearch
 
 from html_extractor import *
+from deletion_helper import *
 from get_suburls import *
 from openai_func import *
 from get_date import *
@@ -38,7 +40,6 @@ from plotting_func import *
 import api_keys
 import matplotlib
 matplotlib.use('agg')
-# from flask import markupsafe.Markup
 from markupsafe import Markup, escape
 
 import openai_func
@@ -46,6 +47,8 @@ import os
 
 import serpapi
 import cohere
+
+from flask_socketio import SocketIO,emit
 
 from keyword_extraction import keyword_extractor_paragraph as kep
 
@@ -56,8 +59,32 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
 from langchain_community.llms import OpenAI
 
+import smtplib
+import ssl
+import certifi
+
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.mime.base import MIMEBase
+from email import encoders
+
+from email_helper import *
+
+port = 587  # For starttls
+smtp_server = "smtp.gmail.com"
+sender_email = "bat463660@gmail.com"
+dev_emal = "mohdmafaz200303@gmail.com"
+receiver_email = "petraoil.prod@gmail.com"
+sender_password = "bygc aape tnem adev"
+
+
 import tempfile
 
+from flask_cors import CORS
+import json
+
+from progress import *
 
 
 from pymongo import MongoClient
@@ -68,6 +95,8 @@ ca = certifi.where()
 
 
 app = Flask(__name__)
+CORS(app)
+socketio = SocketIO(app)
 
 app.secret_key = 'petraoilscraperproject'
 
@@ -111,6 +140,9 @@ def process_files():
        global conversation_context
 
        try:           
+
+        
+        # file_contents = [file.filename for file in request.files.getlist('files')]
         files = request.files.getlist('files[]')
         print(files)
         if not files:
@@ -123,7 +155,7 @@ def process_files():
                 continue
 
             file_extension = filename.rsplit('.', 1)[1].lower()
-            if file_extension in ['pdf', 'txt', 'csv', 'xlsx', 'docx']:
+            if file_extension in ['pdf', 'txt']:
                 text = extract_text(file, file_extension)
                 texts.append((filename, text))
             else:
@@ -149,6 +181,7 @@ def process_files():
 
         # Initialize conversation context
         conversation_context = {"docs": None, "last_question": None}
+        print("YESS")
         return jsonify({'success': True, 'message': 'File data received and processed successfully'})
        
        except Exception as e:
@@ -159,6 +192,20 @@ def process_files():
 @app.route('/scrape', methods=['POST'])
 def scrape():
     app_start_time = time()
+
+    # Deletion
+    directory_path = "Output text"
+    delete_files_until_limit(directory_path, limit = 20)
+
+    # Deletion
+    directory_path = "Output text"
+    delete_files_until_limit(directory_path, limit = 20)
+
+    directory_path = "Plots"
+    delete_files_until_limit(directory_path, limit = 20)
+
+    socketio.emit('print_output', {'output': f'Caches Cleared'})
+
     log_str = ""
     scrape_start_time = time()
 
@@ -175,6 +222,18 @@ def scrape():
     
     data = request.get_json()
     print("Received Data:",data)
+    # socketio.emit('print_output', {'output': 'Received Data: ' + json.dumps(data)})
+
+    S = progress_bar_once(" Received Data ", title=True, num = 100)
+    socketio.emit('print_output', {'output': S})
+    
+    socketio.emit('print_output', {'output': 'Urls Recieved: ' + json.dumps(data["urls"])})
+    socketio.emit('print_output', {'output': 'Keywords Recieved: ' + json.dumps(data["keyword"])})
+    socketio.emit('print_output', {'output': 'Prompt Recieved: ' + json.dumps(data["prompt"])})
+    if data["to_date"] == "":
+        socketio.emit('print_output', {'output': 'If `From Date` or `To Date` are absent, algorithm will set it to be from `today` to `2 years back`'})
+
+
     url = data.get('urls')
     keyword = data.get('keyword')
     prompt=data.get('prompt')
@@ -193,12 +252,14 @@ def scrape():
     today = date.today()
     if to_date_str == '':
         to_date_str = str(today)
-        log_str += "to date not entered"
+        log_str += "\nto date not entered\n"
 
     if from_date_str == '':
         from_date_str = str(today.year - 2) + '-' + str(today.month) + '-' +str(today.day)
         log_str += "from date not entered"
 
+    socketio.emit('print_output', {'output': 'From Date Recieved: ' + json.dumps(from_date_str)})
+    socketio.emit('print_output', {'output': 'To Date Recieved: ' + json.dumps(to_date_str)})
 
     from_date = datetime.strptime(from_date_str, '%Y-%m-%d').strftime('%d-%m-%Y')
     from_date_modified = from_date
@@ -210,6 +271,9 @@ def scrape():
 
     selectedOptions = data.get('selectedOption', [])
 
+    S = progress_bar_once(" Selected Options ", title=True, num = 100)
+    socketio.emit('print_output', {'output': S})
+
     print("The option choosen is",selectedOptions) 
     print("From",from_date)
     print("to",to_date)
@@ -219,23 +283,33 @@ def scrape():
     print(f"Senching for keyword: {keyword}")
     print(f"prompt is: {prompt}")
 
+# display the progress..
+    # socketio.emit('print_output',{'type':'ChoosenOptions', 'output':"Scraping URL: " + json.dumps(url)})
+    # socketio.emit('print_output',{'type':'ChoosenOptions', 'output':"Searching for keyword: " + json.dumps(keyword)})
+    # socketio.emit('print_output',{'type':'ChoosenOptions', 'output':"prompt is: " + json.dumps(prompt)})
+
     SORT_BY_RELAVANCY = 1
 
     SEARCH_BAR_SCRAPE = 0
     GENERAL_DEEP_SCRAPE = 0
     ADVANCED_SEARCH = 0
 
+    
 
     if len(selectedOptions) != 0:
         for choice in selectedOptions:
             if choice == "search-bar":
                 SEARCH_BAR_SCRAPE = 1
+                socketio.emit('print_output',{'type':'ChoosenOptions', 'output': "The option chosen is SEARCH_BAR_SCRAPE"})
             if choice == "general-deep":
                 GENERAL_DEEP_SCRAPE = 1
+                socketio.emit('print_output',{'type':'ChoosenOptions', 'output': "The option chosen is GENERAL_DEEP_SCRAPE"})
             if choice == "advance":
                 ADVANCED_SEARCH = 1
+                socketio.emit('print_output',{'type':'ChoosenOptions', 'output': "The option chosen is ADVANCED_SEARCH"})
     else:
         ADVANCED_SEARCH = 1
+        socketio.emit('print_output',{'type':'ChoosenOptions', 'output': "The option chosen is ADVANCED_SEARCH"})
     
     log_str += f"\n\nOptions:\n\nSEARCH_BAR_SCRAPE: {SEARCH_BAR_SCRAPE}\nGENERAL_DEEP_SCRAPE: {GENERAL_DEEP_SCRAPE}\nADVANCED_SEARCH :{ADVANCED_SEARCH}"
 
@@ -254,17 +328,25 @@ def scrape():
     temp_time = time()
 
     if SEARCH_BAR_SCRAPE == 1:
+        socketio.emit('print_output', {'output': f"Search Bar Scrape is taking place"})
         S = " Search Bar Scrape "
         print("\n\n"+S.center(100, '=')+"\n")
+        socketio.emit('print_output', {'output': f"\n\n{S.center(100, '=')}\n"})
+        
         base_urls = url
 
         search_extras = ["?s=", "/search/", "/search?q=", "/topic/"]
         excluded_domains = r'(magicbricks|443|play\.google|facebook\.com|twitter\.com|instagram\.com|linkedin\.com|youtube\.com|\.gov|\.org|policy|terms|buy|horoscope|web\.whatsapp\.com|\.(png|jpg|jpeg|gif|bmp|tiff|webp))'
         result_urls = generate_urls_with_exclusions(base_urls, search_extras, keywords_list, excluded_domains)
         print('\n'.join(result_urls))
+       #progress
+        socketio.emit('print_output', {'output': '\n'.join(result_urls)})
+
 
         search_html = get_html(list(result_urls), mode_of_search="Search Bar Scrape")
         print(f"Failed to get html: {search_html[1]}")
+        socketio.emit('print_output', {'output': f"Failed to get html: {search_html[1]}"})
+
         search_html_content = search_html[0]
 
         base_url_html_content = get_html(urls=base_urls)[0]
@@ -272,6 +354,8 @@ def scrape():
         search_html_pruned = keep_first_occurrence(search_html)
 
         print("Pruning Completed", len(search_html) - len(search_html_pruned), "Deleted")
+        socketio.emit('print_output', {'output': f"Pruning Completed {len(search_html) - len(search_html_pruned)} Deleted"})
+
     
         urls_list = list(search_html_pruned.keys())
         urls_list_str = ",".join(urls_list)
@@ -283,6 +367,10 @@ def scrape():
         print("Failed Fetch:", failed_fetch)
         print("Splits:", len(inside_urls))
         print("Tree size:", total_size)
+        socketio.emit('print_output', {'output': f"Failed Fetch: {failed_fetch}"})
+        socketio.emit('print_output', {'output': f"Splits: {len(inside_urls)}"})
+        socketio.emit('print_output', {'output': f"Tree size: {total_size}"})
+
 
         ## Joining sub urls into one single list
         website_urls1 = inside_urls[1]
@@ -296,9 +384,12 @@ def scrape():
         
     temp_time = time()
     if GENERAL_DEEP_SCRAPE == 1:
+        socketio.emit('print_output', {'output': f"General Deep Search is taking place"})
 
         S = " General Deep Scrape "
         print("\n\n"+S.center(100, '=')+"\n")
+        socketio.emit('print_output', {'output': f"\n\n{S.center(100, '=')}\n"})
+
 
         ## Extracting sub urls
         urls_list_str = ",".join(url)
@@ -309,6 +400,10 @@ def scrape():
         print("Failed Fetch:", failed_fetch)
         print("Splits:", len(inside_urls2))
         print("Tree size:", total_size2)
+        socketio.emit('print_output', {'output': f"Failed Fetch: {failed_fetch}"})
+        socketio.emit('print_output', {'output': f"Splits: {len(inside_urls2)}"})
+        socketio.emit('print_output', {'output': f"Tree size: {total_size2}"})
+
 
         ## Joining sub urls into one single list
         website_urls2 = [item for sublist in list(inside_urls2.values()) for item in sublist]
@@ -321,10 +416,12 @@ def scrape():
         
     temp_time = time()
     if ADVANCED_SEARCH == 1:
+        socketio.emit('print_output', {'output': f"Advanced Search is taking place"})
         link_results = []
 
         S = " Advanced Search "
         print("\n\n"+S.center(100, '=')+"\n")
+        socketio.emit('print_output', {'output': f"\n\n{S.center(100, '=')}\n"})
         
         Serp_api_list = api_keys.serp_key_list
         Serp_api = get_valid_api_key(Serp_api_list, for_which="Serp")
@@ -388,6 +485,8 @@ def scrape():
     
     else:
         print("length of urls: ",len(website_urls))
+        socketio.emit('print_output', {'output': f"Length of URLs: {len(website_urls)}"})
+
 
         temp_time = time()
 
@@ -404,6 +503,10 @@ def scrape():
         print(f"date_db_name: {date_db_name}")
         print(f"collection_db_name: {collection_db_name}")
         print("Imported Successful")
+        socketio.emit('print_output', {'output': f"date_db_name: {date_db_name}"})
+        socketio.emit('print_output', {'output': f"collection_db_name: {collection_db_name}"})
+        socketio.emit('print_output', {'output': "Imported Successful"})
+
 
         ### Urls of extracted sub urls
         urls_from_extraction = pd.DataFrame(website_urls[:]) 
@@ -422,6 +525,9 @@ def scrape():
         print("\n\n"+S.center(100, '=')+"\n")
 
         print(f"Dates yet to index: {df_of_which_to_find_the_date_of.shape[0]}")
+        socketio.emit('print_output', {'output': f"\n\n{S.center(100, '=')}\n"})
+        socketio.emit('print_output', {'output': f"Dates yet to index: {df_of_which_to_find_the_date_of.shape[0]}"})
+
 
         list_of_which_to_find_the_date_of = list(df_of_which_to_find_the_date_of["url"].values)
 
@@ -429,6 +535,9 @@ def scrape():
         url_date_list = []
         timeout_seconds = 5
 
+        total_items = len(list_of_which_to_find_the_date_of)
+        items_completed = 0
+        num_of_output_progress = 10
         for url in tqdm(list_of_which_to_find_the_date_of):
             start_time = time()
             try:
@@ -437,6 +546,8 @@ def scrape():
             except Exception as e:
                 # Handle exceptions, e.g., print an error message or store a default value
                 print(f"Error fetching date for {url}: {e}")
+                socketio.emit('print_output', {'output': f"Error fetching date for {url}: {e}"})
+
                 date_value = None
 
             elapsed_time = time() - start_time
@@ -446,6 +557,15 @@ def scrape():
                 url_date_list.append([url, date_value])
             else:
                 print(f"Skipping {url} due to timeout of {timeout_seconds}s")
+                socketio.emit('print_output', {'output': f"Skipping {url} due to timeout of {timeout_seconds}s"})
+            
+            
+            items_completed += 1
+            if items_completed % (total_items // num_of_output_progress) == 0:
+                percentage_complete = (items_completed / total_items) * 100
+                socketio.emit('print_output', {'output': f"{progress_bar_once(word='Completed', percentage=round(percentage_complete, 2), num=30)}"})
+
+                
 
         log_str += f"Amount of dates that needed to be fetched: {len(list_of_which_to_find_the_date_of)}\n"
         log_str += f"Dates fetching completed in: {time()-temp_time:.2f}s\n\n"
@@ -456,6 +576,8 @@ def scrape():
         temp_time = time()
         S = " Indexing to Database "
         print("\n\n"+S.center(100, '=')+"\n")
+        socketio.emit('print_output', {'output': f"\n\n{S.center(100, '=')}\n"})
+
 
         data = url_date_dict
         date_db_name = "PetraOil"
@@ -471,12 +593,16 @@ def scrape():
 
         # Columns
         print(urls_date_df.columns)
+        socketio.emit('print_output', {'output': f"Columns: {', '.join(urls_date_df.columns)}"})
+
         plot_date(urls_date_df, save_path=f"Plots/{datetime.now()}.jpg")
 
         # print(urls_date_df.isna().sum())
 
         S = " Filtering by date "
         print("\n\n"+S.center(100, '=')+"\n")
+        socketio.emit('print_output', {'output': '=' * 100})
+
 
         start_date = pd.to_datetime(from_date_modified,format='%d-%m-%Y')
         end_date = pd.to_datetime(to_date,format='%d-%m-%Y')
@@ -494,6 +620,8 @@ def scrape():
             try_times += 1
         
         print(f"Amount of urls between the dates: {df_filtered_by_date.shape[0]}")
+        socketio.emit('print_output', {'output': f"Amount of urls between the dates: {df_filtered_by_date.shape[0]}"})
+
 
         log_str += f"Amount of urls between the dates: {df_filtered_by_date.shape[0]}\n\n"
 
@@ -509,9 +637,12 @@ def scrape():
             df_of_which_to_find_the_html_of = df_of_which_to_find_the_html_of.drop_duplicates(subset='url', keep='first')              # Dropping duplicates if any
 
             print(f"Html yet to index: {df_of_which_to_find_the_html_of.shape[0]}")
+            socketio.emit('print_output', {'output': f"Html yet to index: {df_of_which_to_find_the_html_of.shape[0]}"})
+
 
             list_of_which_to_find_the_html_of = list(df_of_which_to_find_the_html_of["url"])
             url_html_extracted,_ = get_html(list_of_which_to_find_the_html_of)
+
             data = url_date_dict
             date_db_name = "PetraOil"
             collection_db_name = "Html Database"
@@ -521,6 +652,8 @@ def scrape():
 
             S = " Getting html content for particular urls "
             print("\n\n"+S.center(100, '=')+"\n")
+            socketio.emit('print_output', {'output': "\n\n" + '=' * 100 + "\n"})
+
             
             temp_time = time()
 
@@ -545,6 +678,8 @@ def scrape():
                 dashboard(urls_date_df, url_html_df_date_sorted_20, from_date, to_date, amount_of_content)
 
                 print(f"Relavancy Score of page number: {page} is: {url_html_df_date_sorted_20.Relevance_Score.median():.3f}")
+                socketio.emit('print_output', {'output': f"Relavancy Score of page number: {page} is: {url_html_df_date_sorted_20.Relevance_Score.median():.3f}"})
+
 
                 url_html_dict = url_html_df_date_sorted_20.set_index('url')['Html'].to_dict()
                 url_html_dict = {key : clean_and_extract(value) for key,value in url_html_dict.items()}  # Cleaning the Text
@@ -555,6 +690,8 @@ def scrape():
                 try:
                     del url_html_extracted["_id"]
                     print("Deleted _id")
+                    socketio.emit('print_output', {'output': 'Deleted _id'})
+
                 except:
                     pass
 
@@ -565,7 +702,7 @@ def scrape():
                 for key, val in url_extracted_html.items():
                     url_html_content_txt += key + '\n\n' + val + '\n\n' + '-'*50 + '\n\n'
 
-                with open(f"Output text/{datetime.now()}.txt", "w") as f:
+                with open(f"Output text/{india_time}.txt", "w") as f:
                     f.write(url_html_content_txt)
 
                 content_list = [(key,value[:2000]) for key, value in url_extracted_html.items()] # 2000 is temporary until tokenier function is not set up
@@ -590,9 +727,13 @@ def scrape():
 
                 S = " Openai's api execution "
                 print("\n\n"+S.center(100, '=')+"\n")
+                socketio.emit('print_output', {'output': '\n\n'+ '='.center(100, '=') + '\n'})
+
 
                 question = prompt
                 print(f"Itterations: {iterations}")
+                socketio.emit('print_output', {'output': f"Iterations: {iterations}"})
+
                 response_complete = ''
 
                 temp_time = time()
@@ -612,6 +753,8 @@ def scrape():
                     response = get_completion2(prompt)
                     response_complete += response + "\n\n"
                     print(f"Batch {data_idx + 1} out of {iterations} completed ")
+                    socketio.emit('print_output', {'output': f"Batch {data_idx + 1} out of {iterations} completed"})
+
                 log_str += f"\nOpenai execution of {iterations} itteration completed in {time()-temp_time:.2f}s"
 
         else:
@@ -623,24 +766,16 @@ def scrape():
     app_end_time = time()
     
     print(f"Completed in {app_end_time - app_start_time :.2f}s")
+    socketio.emit('print_output', {'output': f"Completed in {app_end_time - app_start_time:.2f}s"})
 
 
 
 
 
-    # Dummy response for demonstration purposes
     response_data = {"url" : url}
-    # trying to solve the bug....
-    # return jsonify({'result':response_complete})
-    # url_encoded_response = quote(response_complete)
-    # return redirect('/result?response_complete=' + response_complete)
-    
-    # return redirect('/result?response_complete=' + response_complete.replace('\n', ''))
+
 
     response_complete = response_complete.strip()
-    # response_complete = "Test"
-
-    # print("Original response_complete:", response_complete)
     response_complete_clickable = make_links_clickable(response_complete)
     response_complete_clickable = response_complete_clickable.replace('\n', '<br>')
     sources = make_links_clickable(sources_str).replace('\n', '<br>')
@@ -654,26 +789,12 @@ def scrape():
     with open("Logs.txt" , "w") as f:
         f.write(log_str)
 
-
     # Logs
-    import smtplib
-    import ssl
-    import certifi
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
-    from email.mime.image import MIMEImage
-
-    port = 587  # For starttls
-    smtp_server = "smtp.gmail.com"
-    sender_email = "bat463660@gmail.com"
-    receiver_email = "petraoil.prod@gmail.com"
-    password = "bygc aape tnem adev"
-
     # Create a multipart message
     message = MIMEMultipart()
     message["From"] = sender_email
-    message["To"] = receiver_email
-    message["Subject"] = f"Subject: {get_indian_date_time()}"
+    message["To"] = dev_emal
+    message["Subject"] = f"Subject: {india_time}"
 
     # Add body to email
     message.attach(MIMEText(log_str, "plain"))
@@ -689,8 +810,19 @@ def scrape():
 
     with smtplib.SMTP(smtp_server, port) as server:
         server.starttls(context=context)
-        server.login(sender_email, password)
+        server.login(sender_email, sender_password)
         server.sendmail(sender_email, receiver_email, message.as_string())
+
+
+
+
+    # sender_email = "bat463660@gmail.com"
+    # sender_password = "bygc aape tnem adev"
+    # receiver_email = "mohdmafaz200303@gmail.com"
+    subject = f"Subject: {india_time}.txt"
+    body = "Text File"
+    attachment_path = f"Output text/{india_time}.txt"
+    send_email(sender_email, sender_password, receiver_email, subject, body, attachment_path)
 
 
 
@@ -714,18 +846,6 @@ def display_image():
     return send_from_directory('dashboard', 'dashboard_plot.png')
 
 
-
-
-    #  response_complete = request.args.get('response_complete')
-    #  response_complete_decoded = unquote(response_complete)
-    #  escaped_text = escape(response_complete_decoded)
-
-    #  print(f'decoddedBrooo: {response_complete_decoded}')
-    #  print(f'escapedd {escaped_text}')
-    #  return render_template('result.html', result_data=escaped_text),200,{'Content-Type': 'text/html'}
-
-
-
-
 if __name__ == '__main__':
-    app.run(debug=True)
+     socketio.run(app)
+    # app.run(debug=True)

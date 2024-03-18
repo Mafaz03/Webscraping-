@@ -186,3 +186,14 @@ function openBot() {
   var openBotUrl = "/chatbot";
   window.open(openBotUrl, "_blank");
 }
+
+var socket = io.connect(window.location.hostname + ":" + window.location.port);
+
+socket.on("print_output", function (data) {
+  console.log("Received message:", data.output);
+
+  const messagetag = document.createElement("p");
+  messagetag.textContent = data.output;
+  const printOutputDiv = document.getElementById("result-progress");
+  printOutputDiv.appendChild(messagetag);
+});

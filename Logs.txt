@@ -1,8 +1,10 @@
 http://postcourier.com.pg
-Keywords: road, project, road project
-Prompt: development in Africa
-From date: 2024-01-04
-To date: 2024-03-08
+Keywords: png, road, development, construction
+Prompt: development status
+to date not entered
+from date not entered
+From date: 2022-3-18
+To date: 2024-03-18
 
 ####################
 
@@ -12,43 +14,43 @@ SEARCH_BAR_SCRAPE: 1
 GENERAL_DEEP_SCRAPE: 1
 ADVANCED_SEARCH :1
 ########################################
-SEARCH BAR SCRAPESearch bar scrape completed in: 16.51s
-Results got: 22
-
-########################################
-GENERAL DEEP SEARCH
-General Deep scrape completed in: 0.29s
+SEARCH BAR SCRAPESearch bar scrape completed in: 15.21s
 Results got: 1
 
 ########################################
-ADVANCED SEARCH 0
-From date in advaced scrape was modified from 2024-01-04 to 04-01-2022
+GENERAL DEEP SEARCH
+General Deep scrape completed in: 1.89s
+Results got: 3
 
-Results got: 70, in 1 tries
-Advanced scrape 0 completed in: 0.15s
+########################################
+ADVANCED SEARCH 0
+From date in advaced scrape was modified from 2022-3-18 to 18-03-2022
+
+Results got: 100, in 0 tries
+Advanced scrape 0 completed in: 2.75s
 
 ####################
-Total urls collected: 93
-https://www.postcourier.com.pg/china-town-to-malahang-road-commissioned/
-https://www.postcourier.com.pg/potholes-on-williams-road/
-https://www.postcourier.com.pg/priority-given-to-industrial-roads/
-https://www.postcourier.com.pg/search/%20road%20project/page/2/
-https://www.postcourier.com.pg/search/%20road%20project/page/246/
-https://www.postcourier.com.pg/road-project-to-benefit-wards/
-https://www.postcourier.com.pg/search/road/page/2/
-https://www.postcourier.com.pg/search/road/page/874/
-https://www.postcourier.com.pg/more-road-projects-and-new-suburbs/
-https://www.postcourier.com.pg/road-traffic-authority-launch-new-system/
-Importing DB from mongo and preprocessing df completed in: 1.52s
+Total urls collected: 104
+https://www.postcourier.com.pg/special-olympics-png-host-first-of-its-kinds-volunteer-program/
+http://postcourier.com.pg
+https://www.postcourier.com.pg/special-olympics-png-host-first-of-its-kinds-volunteer-program/
+https://www.postcourier.com.pg/special-olympics-png-host-first-of-its-kinds-volunteer-program/?share=linkedin
+https://www.postcourier.com.pg/projects-roll-on-as-belt-and-road-initiative-reaches-milestone/
+https://www.postcourier.com.pg/pm-to-attend-groundbreaking-for-tokua-kokopo-4-lane-road/
+https://www.postcourier.com.pg/nawaeb-focus-on-impact-projects-pelgen/
+https://www.postcourier.com.pg/rigo-ring-road-set/
+https://www.postcourier.com.pg/pnyang-gas-project-after-development-construction-phase/
+https://www.postcourier.com.pg/acting-gg-executes-roads-highways-construction-rehab-contracts/
+Importing DB from mongo and preprocessing df completed in: 1.44s
 
-Amount of dates that needed to be fetched: 19
-Dates fetching completed in: 29.97s
+Amount of dates that needed to be fetched: 37
+Dates fetching completed in: 46.60s
 
-Dated Indexed back to mongo in: 0.44s
+Dated Indexed back to mongo in: 0.36s
 
-Amount of urls between the dates: 73
+Amount of urls between the dates: 66
 
-Sorting completed in 1.18s
-Openai execution of 4 itteration completed in 32.03s
+Sorting completed in 2.86s
+Openai execution of 4 itteration completed in 58.34s
 
-Total time: 122.15s
+Total time: 151.55s

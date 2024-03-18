@@ -15,7 +15,7 @@ cohere==4.44
 PyPDF2==3.0.1
 langchain==0.1.1
 langchain_community==0.0.14
+MarkupSafe==2.1.5
 google-search-results
 os
 certifi
-python-docx 
